@@ -1,0 +1,1993 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SMART Token — Interactive Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0a0f;--surf:#111118;--surf2:#18181f;--surf3:#1e1e28;
+  --brd:rgba(255,255,255,0.07);--brd2:rgba(255,255,255,0.12);
+  --teal:#00d4a8;--teal-dim:rgba(0,212,168,0.10);--teal-g:rgba(0,212,168,0.25);
+  --red:#ff4757;--red-dim:rgba(255,71,87,0.10);
+  --amber:#f5a623;
+  --txt:#e8e8f0;--txt2:#8888a0;--txt3:#555568;
+  --fd:'Syne',sans-serif;--fb:'Instrument Sans',sans-serif;--fm:'JetBrains Mono',monospace;
+}
+body{font-family:var(--fb);background:var(--bg);color:var(--txt);min-height:100vh;overflow-x:hidden}
+
+/* ── HEADER ── */
+.hdr{padding:14px 28px;display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid var(--brd);background:rgba(10,10,15,.96);
+  backdrop-filter:blur(12px);position:sticky;top:0;z-index:200}
+.logo{display:flex;align-items:center;gap:8px;font-family:var(--fd);font-weight:700;font-size:15px;letter-spacing:.01em}
+.logo-dot{width:8px;height:8px;border-radius:50%;background:var(--teal);box-shadow:0 0 10px var(--teal)}
+.series-pill{font-size:11px;font-family:var(--fm);color:var(--txt3);background:var(--surf2);padding:3px 10px;border-radius:20px;border:1px solid var(--brd)}
+.prog{display:flex;align-items:center;gap:5px}
+.pd{width:6px;height:6px;border-radius:50%;background:var(--brd2);transition:all .3s}
+.pd.done{background:var(--teal);box-shadow:0 0 6px var(--teal-g)}
+.pd.active{background:var(--teal);transform:scale(1.5);box-shadow:0 0 10px var(--teal)}
+
+/* ── SCENE ── */
+.scene{display:none}
+.scene.active{display:flex;flex-direction:column;min-height:calc(100vh - 57px)}
+
+/* ── NARRATIVE BAR ── */
+.nar{display:flex;align-items:center;gap:14px;padding:12px 28px;
+  background:var(--surf);border-bottom:1px solid var(--brd)}
+.nar-step{font-family:var(--fm);font-size:10px;color:var(--teal);letter-spacing:.12em;white-space:nowrap}
+.nar-txt{font-size:13px;color:var(--txt2);line-height:1.6;flex:1}
+.nar-txt strong{color:var(--txt)}
+.nar-btns{display:flex;gap:7px;flex-shrink:0}
+.bn{background:var(--surf2);border:1px solid var(--brd2);color:var(--txt2);
+  padding:7px 15px;border-radius:6px;font-size:12px;font-weight:600;
+  cursor:pointer;font-family:var(--fb);transition:all .15s;white-space:nowrap}
+.bn:hover{border-color:var(--teal);color:var(--teal)}
+.bn.p{background:var(--teal);color:#000;border-color:var(--teal)}
+.bn.p:hover{opacity:.88}
+
+/* ── SPLIT ── */
+.split{display:grid;grid-template-columns:1fr 1fr;flex:1}
+.pane{padding:24px 28px;border-right:1px solid var(--brd);overflow:hidden}
+.pane:last-child{border-right:none}
+.pane-lbl{font-family:var(--fm);font-size:10px;color:var(--txt3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:7px}
+.pane-dot{width:5px;height:5px;border-radius:50%}
+
+/* ── PHONE ── */
+.phone{max-width:300px;margin:0 auto;background:var(--surf);border:1px solid var(--brd2);border-radius:26px;overflow:hidden}
+.pbar{height:42px;background:var(--surf2);display:flex;align-items:center;padding:0 16px;gap:8px;border-bottom:1px solid var(--brd);flex-shrink:0}
+.pbar-title{font-size:13px;font-weight:600;flex:1;text-align:center}
+.pback{font-size:12px;color:var(--teal);cursor:pointer}
+.pbody{padding:18px;min-height:460px}
+
+/* ── BANK CHROME ── */
+.bank-hdr{display:flex;align-items:center;gap:10px;margin-bottom:20px}
+.bank-logo{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;font-family:var(--fd);border:1px solid rgba(255,255,255,.1);flex-shrink:0}
+.acct-card{background:linear-gradient(135deg,#0f2240,#1a3a5c);border-radius:13px;padding:16px;margin-bottom:18px;border:1px solid rgba(74,158,255,.15);position:relative;overflow:hidden}
+.acct-card::after{content:'';position:absolute;top:-24px;right:-24px;width:90px;height:90px;border-radius:50%;background:rgba(74,158,255,.06)}
+.bal-lbl{font-size:10px;color:rgba(255,255,255,.5);margin-bottom:3px}
+.bal{font-size:24px;font-weight:700;font-family:var(--fd);color:#fff}
+.acct-no{font-size:10px;color:rgba(255,255,255,.35);margin-top:6px;font-family:var(--fm)}
+.kyc-pill{display:inline-flex;align-items:center;gap:4px;background:rgba(0,212,168,.12);border:1px solid rgba(0,212,168,.25);border-radius:20px;padding:2px 9px;font-size:10px;color:var(--teal);margin-top:7px}
+.menu-lbl{font-size:10px;color:var(--txt3);letter-spacing:.09em;text-transform:uppercase;margin-bottom:7px;font-family:var(--fm)}
+.mitem{display:flex;align-items:center;gap:10px;padding:10px;border-radius:9px;cursor:pointer;transition:background .15s;border:1px solid transparent;margin-bottom:4px}
+.mitem:hover{background:var(--surf2)}
+.mitem.hl{background:var(--teal-dim);border-color:rgba(0,212,168,.2)}
+.micon{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.mtxt{flex:1}
+.mtitle{font-size:12px;font-weight:500}
+.msub{font-size:10px;color:var(--txt2);margin-top:1px}
+.marrow{color:var(--txt3);font-size:11px}
+
+/* ── PLATFORM PICKER ── */
+.picker-title{font-size:11px;font-weight:600;color:var(--txt2);text-transform:uppercase;letter-spacing:.07em;font-family:var(--fm);margin-bottom:10px}
+.plat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.plat-card{background:var(--surf2);border:1px solid var(--brd2);border-radius:10px;padding:10px;cursor:pointer;transition:all .18s;display:flex;align-items:center;gap:9px}
+.plat-card:hover{border-color:var(--brd2);transform:translateY(-1px)}
+.plat-card.sel{border-color:var(--teal);background:var(--teal-dim)}
+.plat-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:15px}
+.plat-name{font-size:12px;font-weight:600}
+.plat-handle{font-size:10px;color:var(--txt2);margin-top:1px;font-family:var(--fm)}
+
+/* ── FORM ── */
+.flbl{font-size:10px;font-weight:600;color:var(--txt2);text-transform:uppercase;letter-spacing:.07em;font-family:var(--fm);display:block;margin-bottom:5px}
+.finput{width:100%;background:var(--surf3);border:1px solid var(--brd2);border-radius:7px;padding:9px 11px;font-size:12px;color:var(--txt);font-family:var(--fb);outline:none;transition:border .15s;margin-bottom:11px}
+.finput:focus{border-color:var(--teal)}
+.finput[readonly]{color:var(--txt2);cursor:default}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.opt-box{background:var(--surf2);border-radius:9px;padding:11px;margin-bottom:11px;border:1px solid var(--brd)}
+.opt-ttl{font-size:10px;color:var(--txt2);font-family:var(--fm);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}
+.opt-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.opt-item{display:flex;align-items:center;gap:6px;font-size:11px;cursor:pointer;padding:3px 0}
+.opt-item input{accent-color:var(--teal)}
+
+/* ── BUTTONS ── */
+.btn-full{width:100%;border:none;padding:11px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--fd);transition:opacity .2s;letter-spacing:.02em;margin-bottom:8px}
+.btn-teal{background:var(--teal);color:#000}
+.btn-teal:hover{opacity:.88}
+.btn-teal:disabled{opacity:.35;cursor:not-allowed}
+.btn-ghost{background:var(--surf3);color:var(--txt);border:1px solid var(--brd2)}
+.btn-ghost:hover{border-color:var(--teal);color:var(--teal)}
+.btn-red{background:var(--red);color:#fff}
+.btn-red:hover{opacity:.85}
+
+/* ── TOKEN CARD ── */
+.tok-card{background:var(--surf2);border:1px solid rgba(0,212,168,.3);border-radius:11px;padding:13px;margin-bottom:11px}
+.tok-hdr{display:flex;align-items:center;gap:7px;margin-bottom:10px;padding-bottom:9px;border-bottom:1px solid var(--brd)}
+.tok-dot{width:7px;height:7px;border-radius:50%;background:var(--teal);box-shadow:0 0 7px var(--teal);flex-shrink:0}
+.tok-title{font-size:11px;font-weight:700;color:var(--teal);font-family:var(--fm)}
+.tok-id{font-size:10px;color:var(--txt3);font-family:var(--fm);margin-left:auto}
+.tfield{display:flex;justify-content:space-between;padding:4px 0;font-size:11px;border-bottom:1px solid rgba(255,255,255,.04)}
+.tfield:last-child{border-bottom:none}
+.tk{color:var(--txt3);font-family:var(--fm);font-size:10px}
+.tv{color:var(--txt);font-weight:500}
+.tok-sig{font-family:var(--fm);font-size:9px;color:var(--txt3);margin-top:8px;padding-top:7px;border-top:1px solid var(--brd);word-break:break-all;line-height:1.5}
+
+/* ── REVOKE ── */
+.rev-panel{background:var(--red-dim);border:1px solid rgba(255,71,87,.22);border-radius:9px;padding:13px;margin-top:10px;display:none}
+.rev-panel.show{display:block}
+.rev-title{font-size:11px;font-weight:700;color:var(--red);margin-bottom:5px}
+.rev-desc{font-size:11px;color:var(--txt2);line-height:1.5;margin-bottom:9px}
+
+/* ── SOCIAL PLATFORM ── */
+.soc-bar{display:flex;align-items:center;padding:9px 13px;gap:9px;background:var(--surf2);border-bottom:1px solid var(--brd)}
+.soc-brand{font-family:var(--fd);font-size:15px;font-weight:700}
+.soc-search{flex:1;background:var(--surf3);border:1px solid var(--brd);border-radius:18px;padding:5px 11px;font-size:11px;color:var(--txt3)}
+.prof-cover{height:55px;background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460);border-radius:9px 9px 0 0;margin:-18px -18px 0}
+.prof-av-wrap{margin-top:-20px;margin-left:11px;margin-bottom:7px;position:relative;display:inline-block}
+.prof-av{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;border:3px solid var(--surf);flex-shrink:0}
+.prof-name{font-size:14px;font-weight:700;margin-bottom:1px}
+.prof-handle{font-size:11px;color:var(--txt2);margin-bottom:8px}
+.smart-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:600;border:1px solid;cursor:pointer;transition:all .18s;margin-bottom:8px}
+.sb-none{background:rgba(255,255,255,.04);border-color:var(--brd2);color:var(--txt3);cursor:default}
+.sb-ok{background:var(--teal-dim);border-color:rgba(0,212,168,.3);color:var(--teal)}
+.sb-ok:hover{background:rgba(0,212,168,.18)}
+.sb-rev{background:var(--red-dim);border-color:rgba(255,71,87,.3);color:var(--red);cursor:default}
+.bdot{width:5px;height:5px;border-radius:50%}
+.bd-g{background:var(--txt3)}
+.bd-t{background:var(--teal);box-shadow:0 0 5px var(--teal)}
+.bd-r{background:var(--red)}
+
+/* ── ID POPUP ── */
+.idpop{background:var(--surf2);border:1px solid rgba(0,212,168,.25);border-radius:11px;padding:13px;margin-bottom:8px;display:none;animation:popIn .2s ease}
+.idpop.open{display:block}
+@keyframes popIn{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
+.idpop-hdr{display:flex;align-items:center;gap:6px;font-size:10px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.1em;font-family:var(--fm);padding-bottom:9px;border-bottom:1px solid var(--brd);margin-bottom:9px}
+.idc{display:flex;justify-content:space-between;padding:4px 0;font-size:11px;border-bottom:1px solid rgba(255,255,255,.04)}
+.idc:last-child{border-bottom:none}
+.ick{color:var(--txt2)}
+.icv{font-weight:600}
+.idfooter{font-size:9px;color:var(--txt3);margin-top:7px;padding-top:7px;border-top:1px solid var(--brd);font-family:var(--fm)}
+
+/* ── API LOG ── */
+.api-log{background:var(--bg);border-radius:7px;padding:9px;font-family:var(--fm);font-size:10px;color:var(--txt2);min-height:56px;line-height:1.8;white-space:pre}
+.lg{color:var(--teal)}
+.lr{color:var(--red)}
+.ld{color:var(--txt3)}
+
+/* ── INTRO ── */
+#s-intro{align-items:center;justify-content:center;text-align:center;padding:60px 28px;position:relative;overflow:hidden}
+#s-intro::before{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:500px;height:500px;background:radial-gradient(circle,rgba(0,212,168,.06) 0%,transparent 70%);pointer-events:none}
+.intro-eye{font-family:var(--fm);font-size:11px;color:var(--teal);letter-spacing:.15em;text-transform:uppercase;margin-bottom:18px}
+.intro-h{font-family:var(--fd);font-size:clamp(28px,5vw,50px);font-weight:700;line-height:1.1;margin-bottom:16px;letter-spacing:-.02em}
+.intro-h span{color:var(--teal)}
+.intro-p{font-size:15px;color:var(--txt2);max-width:500px;margin:0 auto 36px;line-height:1.7}
+.personas{display:flex;justify-content:center;gap:12px;margin-bottom:40px;flex-wrap:wrap}
+.p-card{background:var(--surf2);border:1px solid var(--brd);border-radius:11px;padding:14px 18px;display:flex;align-items:center;gap:11px;cursor:pointer;transition:all .2s;min-width:170px}
+.p-card:hover{transform:translateY(-2px);border-color:var(--brd2)}
+.p-card.sel{border-color:var(--teal);background:var(--teal-dim)}
+.p-av{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0}
+.p-name{font-size:13px;font-weight:600}
+.p-role{font-size:11px;color:var(--txt2);margin-top:2px}
+.btn-start{background:var(--teal);color:#000;border:none;padding:13px 34px;border-radius:8px;font-size:14px;font-weight:700;font-family:var(--fd);cursor:pointer;transition:all .2s;letter-spacing:.02em}
+.btn-start:hover{opacity:.88;transform:translateY(-1px)}
+.btn-start:disabled{opacity:.35;cursor:not-allowed;transform:none}
+
+/* ── SUCCESS ── */
+#s-success{align-items:center;justify-content:center;text-align:center;padding:50px 28px}
+.ring{width:76px;height:76px;border-radius:50%;border:2px solid var(--teal);display:flex;align-items:center;justify-content:center;margin:0 auto 22px;font-size:30px;box-shadow:0 0 30px var(--teal-g);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 30px var(--teal-g)}50%{box-shadow:0 0 50px rgba(0,212,168,.4)}}
+.suc-h{font-family:var(--fd);font-size:28px;font-weight:700;margin-bottom:10px}
+.suc-p{font-size:14px;color:var(--txt2);max-width:460px;margin:0 auto 28px;line-height:1.6}
+.sum-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:520px;margin:0 auto 28px}
+.sum-c{background:var(--surf2);border:1px solid var(--brd);border-radius:9px;padding:12px}
+.sum-lbl{font-size:10px;color:var(--txt3);font-family:var(--fm);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px}
+.sum-val{font-size:12px;font-weight:600}
+
+/* ── RECOVERY SCENE ── */
+#s-recovery{align-items:center;justify-content:center;padding:40px 28px}
+.rec-wrap{max-width:680px;width:100%;margin:0 auto}
+.rec-banner{background:var(--red-dim);border:1px solid rgba(255,71,87,.25);border-radius:12px;padding:18px 20px;margin-bottom:20px;display:flex;align-items:flex-start;gap:14px}
+.rec-icon{font-size:24px;flex-shrink:0}
+.rec-title{font-size:15px;font-weight:700;color:var(--red);margin-bottom:4px;font-family:var(--fd)}
+.rec-desc{font-size:13px;color:var(--txt2);line-height:1.6}
+.rec-steps{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+.rec-step{background:var(--surf2);border:1px solid var(--brd);border-radius:11px;padding:16px}
+.rs-num{width:24px;height:24px;border-radius:50%;background:var(--teal-dim);border:1px solid rgba(0,212,168,.25);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--teal);font-family:var(--fd);margin-bottom:10px}
+.rs-title{font-size:13px;font-weight:600;margin-bottom:4px}
+.rs-desc{font-size:12px;color:var(--txt2);line-height:1.5}
+.rs-code{font-family:var(--fm);font-size:10px;background:var(--bg);padding:6px 9px;border-radius:5px;margin-top:7px;color:var(--teal)}
+.rec-result{background:var(--surf2);border:1px solid var(--brd);border-radius:11px;padding:16px;margin-bottom:20px}
+.rr-title{font-size:13px;font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:7px}
+.status-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--brd);font-size:12px}
+.status-row:last-child{border-bottom:none}
+.status-lbl{color:var(--txt2)}
+.status-val-ok{color:var(--teal);font-weight:600;display:flex;align-items:center;gap:4px}
+.status-val-bad{color:var(--red);font-weight:600}
+.status-val-neu{font-weight:500}
+
+/* ── TOKEN FLIGHT ── */
+.tok-fly{position:fixed;top:50%;left:25%;width:150px;background:var(--teal);color:#000;border-radius:8px;padding:8px 13px;font-size:11px;font-weight:700;font-family:var(--fm);text-align:center;z-index:999;pointer-events:none;opacity:0;transform:translate(-50%,-50%);box-shadow:0 0 28px var(--teal-g)}
+.tok-fly.fly{animation:tokFly 1.4s cubic-bezier(.4,0,.2,1) forwards}
+@keyframes tokFly{
+  0%{opacity:0;left:25%;transform:translate(-50%,-50%) scale(.8)}
+  15%{opacity:1;transform:translate(-50%,-50%) scale(1)}
+  85%{opacity:1;left:75%;transform:translate(-50%,-50%) scale(1)}
+  100%{opacity:0;left:75%;transform:translate(-50%,-50%) scale(.8)}
+}
+
+/* ── MISC ── */
+.fade{animation:fadeIn .25s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.info-box{background:var(--surf2);border-radius:10px;padding:14px;border:1px solid var(--brd);font-family:var(--fm);font-size:11px;color:var(--txt2);line-height:1.8;max-width:300px;margin:0 auto}
+.sep{color:var(--txt3)}
+
+@media(max-width:680px){
+  .split{grid-template-columns:1fr}
+  .pane{border-right:none;border-bottom:1px solid var(--brd)}
+  .nar{flex-direction:column}
+  .nar-btns{width:100%}
+  .sum-grid{grid-template-columns:1fr 1fr}
+  .rec-steps{grid-template-columns:1fr}
+  .plat-grid{grid-template-columns:1fr 1fr}
+}
+
+/* ── SMART VERIFIED TICK BADGE ── */
+.smart-tick{display:inline-flex;align-items:center;gap:5px;cursor:pointer;user-select:none;margin-bottom:6px;transition:opacity .15s}
+.smart-tick:hover{opacity:.82}
+.v-tick-wrap{position:relative;display:inline-block}
+.v-tick-wrap .tick-icon{position:absolute;bottom:-2px;right:-2px;width:16px;height:16px}
+.tick-icon{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s}
+.tick-verified{background:var(--teal);box-shadow:0 0 10px var(--teal-g)}
+.tick-revoked{background:var(--red);box-shadow:none}
+.tick-none{background:var(--brd2);box-shadow:none}
+.tick-lbl{font-size:11px;font-weight:600}
+.tick-lbl-ok{color:var(--teal)}
+.tick-lbl-rev{color:var(--red)}
+.tick-lbl-none{color:var(--txt3)}
+@keyframes tickPop{0%{transform:scale(0);opacity:0}65%{transform:scale(1.25)}100%{transform:scale(1);opacity:1}}
+.tick-icon.pop{animation:tickPop .3s cubic-bezier(.34,1.56,.64,1)}
+
+/* ── IDENTITY CARD POPUP ── */
+.id-card-popup{display:none;position:absolute;left:0;right:0;z-index:50;margin-top:4px}
+.id-card-popup.open{display:block;animation:cardSlide .22s ease}
+@keyframes cardSlide{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+.icp-inner{background:var(--surf);border:1px solid rgba(0,212,168,.35);border-radius:13px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.4)}
+.icp-header{background:var(--teal-dim);border-bottom:1px solid rgba(0,212,168,.2);padding:10px 14px;display:flex;align-items:center;gap:10px}
+.icp-av{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;border:2px solid var(--teal)}
+.icp-hname{font-size:13px;font-weight:700}
+.icp-hlbl{font-size:10px;color:var(--teal);font-family:var(--fm);margin-top:1px;display:flex;align-items:center;gap:4px}
+.icp-body{padding:10px 14px}
+.icp-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--brd);font-size:12px}
+.icp-row:last-child{border-bottom:none}
+.icp-k{color:var(--txt2)}
+.icp-v{font-weight:600;color:var(--txt)}
+.icp-opt-badge{font-size:9px;background:var(--teal-dim);color:var(--teal);border:1px solid rgba(0,212,168,.2);border-radius:20px;padding:1px 6px;margin-left:4px;font-family:var(--fm)}
+.icp-footer{padding:8px 14px;border-top:1px solid var(--brd);font-size:9px;color:var(--txt3);font-family:var(--fm);display:flex;align-items:center;gap:5px}
+.icp-close{position:absolute;top:8px;right:10px;font-size:14px;color:var(--txt3);cursor:pointer;line-height:1;padding:2px 4px;border-radius:4px}
+.icp-close:hover{color:var(--txt);background:var(--surf2)}
+
+/* ── RECOVERY SIMULATION ── */
+.rec-split{display:grid;grid-template-columns:1fr 1fr;flex:1;min-height:0}
+.hack-alert{background:var(--red-dim);border:1px solid rgba(255,71,87,.3);border-radius:10px;padding:11px 14px;margin-bottom:12px;display:flex;align-items:flex-start;gap:9px}
+.hack-alert-icon{font-size:18px;flex-shrink:0;margin-top:1px}
+.hack-alert-title{font-size:12px;font-weight:700;color:var(--red);margin-bottom:3px}
+.hack-alert-body{font-size:11px;color:var(--txt2);line-height:1.5}
+.hacker-session{background:var(--surf2);border:1px solid rgba(255,71,87,.2);border-radius:9px;padding:10px;margin-bottom:10px}
+.hs-label{font-size:9px;font-weight:700;color:var(--red);font-family:var(--fm);text-transform:uppercase;letter-spacing:.1em;margin-bottom:7px;display:flex;align-items:center;gap:5px}
+.hs-pulse{width:6px;height:6px;border-radius:50%;background:var(--red);animation:hsPulse 1s ease infinite}
+@keyframes hsPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+.hs-row{display:flex;justify-content:space-between;font-size:11px;padding:3px 0;border-bottom:1px solid rgba(255,71,87,.1)}
+.hs-row:last-child{border-bottom:none}
+.hs-k{color:var(--txt3)}
+.hs-v{color:var(--red);font-family:var(--fm);font-size:10px}
+.rec-step-pill{display:flex;align-items:center;gap:7px;padding:9px 12px;border-radius:9px;cursor:pointer;border:1px solid var(--brd);background:var(--surf2);margin-bottom:6px;transition:all .18s}
+.rec-step-pill:hover{border-color:var(--brd2)}
+.rec-step-pill.active-step{border-color:var(--teal);background:var(--teal-dim)}
+.rec-step-pill.done-step{border-color:rgba(0,212,168,.3);background:rgba(0,212,168,.05)}
+.rsp-num{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;font-family:var(--fd);flex-shrink:0;transition:all .2s}
+.rsp-num-pending{background:var(--surf3);color:var(--txt3);border:1px solid var(--brd2)}
+.rsp-num-active{background:var(--teal);color:#000}
+.rsp-num-done{background:rgba(0,212,168,.15);color:var(--teal);border:1px solid rgba(0,212,168,.3)}
+.rsp-txt{flex:1}
+.rsp-title{font-size:12px;font-weight:600}
+.rsp-sub{font-size:10px;color:var(--txt3);margin-top:1px}
+.rsp-check{color:var(--teal);font-size:14px;display:none}
+.rsp-check.show{display:block}
+/* Social side states */
+.soc-hacker-bar{background:var(--red-dim);border:1px solid rgba(255,71,87,.25);border-radius:8px;padding:7px 10px;font-size:10px;color:var(--red);display:flex;align-items:center;gap:6px;margin-bottom:8px}
+.soc-hacker-bar.hidden{display:none}
+.new-tok-card{background:var(--teal-dim);border:1px solid rgba(0,212,168,.3);border-radius:10px;padding:12px;display:none}
+.new-tok-card.show{display:block;animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:680px){.rec-split{grid-template-columns:1fr}}
+
+/* ── TELECOM APP CHROME ── */
+.tele-hdr{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.tele-logo{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;font-family:var(--fd);border:1px solid rgba(255,255,255,.1);flex-shrink:0;color:#fff;background:linear-gradient(135deg,#e31837,#a0102a)}
+.signal-card{background:linear-gradient(135deg,#1a0508,#3a0a10);border-radius:13px;padding:14px;margin-bottom:16px;border:1px solid rgba(227,24,55,.2);position:relative;overflow:hidden}
+.signal-card::after{content:'';position:absolute;top:-20px;right:-20px;width:80px;height:80px;border-radius:50%;background:rgba(227,24,55,.08)}
+.signal-row{display:flex;align-items:center;gap:6px;margin-bottom:3px}
+.signal-bars{display:flex;gap:2px;align-items:flex-end}
+.signal-bar{width:3px;border-radius:1px;background:rgba(227,24,55,.3)}
+.signal-bar.active{background:#e31837}
+.signal-num{font-size:10px;color:rgba(255,255,255,.4);font-family:var(--fm)}
+.plan-name{font-size:16px;font-weight:700;font-family:var(--fd);color:#fff;margin-bottom:2px}
+.phone-num{font-size:11px;color:rgba(255,255,255,.45);font-family:var(--fm)}
+.sim-pill{display:inline-flex;align-items:center;gap:4px;background:rgba(227,24,55,.15);border:1px solid rgba(227,24,55,.3);border-radius:20px;padding:2px 9px;font-size:9px;color:#e31837;margin-top:6px}
+.net-verified-pill{display:inline-flex;align-items:center;gap:4px;background:rgba(0,212,168,.12);border:1px solid rgba(0,212,168,.25);border-radius:20px;padding:2px 9px;font-size:9px;color:var(--teal);margin-top:4px;margin-left:4px}
+</style>
+</head>
+<body>
+
+<div class="tok-fly" id="tokFly">⬡ SMART TOKEN</div>
+
+<!-- HEADER -->
+<header class="hdr">
+  <div class="logo"><div class="logo-dot"></div>SMART Token</div>
+  <span class="series-pill">Ideas in the Open — #1</span>
+  <div class="prog">
+    <div class="pd active" id="p0"></div>
+    <div class="pd" id="p1"></div>
+    <div class="pd" id="p2"></div>
+    <div class="pd" id="p3"></div>
+    <div class="pd" id="p4"></div>
+    <div class="pd" id="p5"></div>
+    <div class="pd" id="p6"></div>
+  </div>
+</header>
+
+<!-- ═══ INTRO ═══ -->
+<section class="scene active" id="s-intro">
+  <div class="intro-eye">Interactive walkthrough</div>
+  <h1 class="intro-h">How SMART Token <span>actually works</span></h1>
+  <p class="intro-p">Pick a persona. Walk through the bank issuing a verified identity token, applying it to a real social platform, and handling a compromised account — step by step.</p>
+  <div class="personas">
+    <div class="p-card" onclick="selPersona(0,this)">
+      <div class="p-av" style="background:linear-gradient(135deg,#1a3a5c,#0f2240);color:#4a9eff">SK</div>
+      <div>
+        <div class="p-name">Siva Kumar</div>
+        <div class="p-role">ABC Bank · USA</div>
+        <div style="display:flex;align-items:center;gap:4px;margin-top:4px">
+          <div style="width:14px;height:14px;border-radius:3px;background:#0a66c2;display:flex;align-items:center;justify-content:center"><svg width="9" height="9" viewBox="0 0 24 24" fill="white"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></div>
+          <span style="font-size:9px;color:var(--txt3)">LinkedIn</span>
+        </div>
+      </div>
+    </div>
+    <div class="p-card" onclick="selPersona(1,this)">
+      <div class="p-av" style="background:linear-gradient(135deg,#2d1a5c,#1a0f40);color:#a970ff">PM</div>
+      <div>
+        <div class="p-name">Priya Mehta</div>
+        <div class="p-role">HDFC Bank · India</div>
+        <div style="display:flex;align-items:center;gap:4px;margin-top:4px">
+          <div style="width:14px;height:14px;border-radius:3px;background:#1877f2;display:flex;align-items:center;justify-content:center"><svg width="8" height="8" viewBox="0 0 24 24" fill="white"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg></div>
+          <span style="font-size:9px;color:var(--txt3)">Facebook</span>
+        </div>
+      </div>
+    </div>
+    <div class="p-card" onclick="selPersona(2,this)">
+      <div class="p-av" style="background:linear-gradient(135deg,#3a0a10,#1a0508);color:#e31837">JC</div>
+      <div>
+        <div class="p-name">James Chen</div>
+        <div class="p-role">T-Mobile · Phone Identity</div>
+        <div style="display:flex;align-items:center;gap:4px;margin-top:4px">
+          <div style="width:14px;height:14px;border-radius:3px;background:#000;display:flex;align-items:center;justify-content:center"><svg width="8" height="8" viewBox="0 0 24 24" fill="white"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.747l7.73-8.835L1.254 2.25H8.08l4.259 5.631zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></div>
+          <span style="font-size:9px;color:var(--txt3)">X (Twitter)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <button class="btn-start" id="btnStart" onclick="startDemo()" disabled>Choose a persona to begin</button>
+  <!-- Live social platform preview appears when persona is selected -->
+  <div id="socialPhoneIntro" style="max-width:260px;margin:18px auto 0"></div>
+</section>
+
+<!-- ═══ STEP 1 — BANK HOME ═══ -->
+<section class="scene" id="s-bank">
+  <div class="nar">
+    <span class="nar-step">STEP 01</span>
+    <div class="nar-txt" id="home-nar-txt"><strong>Open your Trust Authority app.</strong> You're already a verified customer — identity was confirmed when you registered. Navigate to Digital Identity to create a SMART token.</div>
+    <div class="nar-btns">
+      <button class="bn p" onclick="goTo('s-getcode')">Go to Digital Identity →</button>
+    </div>
+  </div>
+  <div class="split">
+    <div class="pane">
+      <div class="pane-lbl"><div class="pane-dot" style="background:#4a9eff"></div><span id="home-pane-lbl">Your bank app</span></div>
+      <div class="phone">
+        <div class="pbar"><div style="width:10px;height:10px;border-radius:50%;background:var(--brd2)"></div><div class="pbar-title" id="bankTitle">NexaBank</div></div>
+        <div class="pbody">
+          <div class="bank-hdr">
+            <div class="bank-logo" id="bankLogo" style="background:linear-gradient(135deg,#1a3a5c,#0f2240);color:#4a9eff">NB</div>
+            <div><div style="font-size:13px;font-weight:600" id="bankName">NexaBank</div><div style="font-size:10px;color:var(--txt2)" id="bankSubtitle">Personal Banking</div></div>
+          </div>
+          <!-- Dynamic home card: bank shows balance, telecom shows plan/signal -->
+          <div id="home-card-bank" class="acct-card">
+            <div class="bal-lbl">Available balance</div>
+            <div class="bal" id="bankBal">$12,450.00</div>
+            <div class="acct-no" id="bankAcct">•••• •••• 4821</div>
+            <div class="kyc-pill"><span style="width:5px;height:5px;border-radius:50%;background:var(--teal)"></span>KYC Verified</div>
+          </div>
+          <div id="home-card-telecom" class="signal-card" style="display:none">
+            <div class="signal-row">
+              <div class="signal-bars">
+                <div class="signal-bar active" style="height:4px"></div>
+                <div class="signal-bar active" style="height:6px"></div>
+                <div class="signal-bar active" style="height:9px"></div>
+                <div class="signal-bar active" style="height:12px"></div>
+                <div class="signal-bar active" style="height:15px"></div>
+              </div>
+              <span class="signal-num" id="tele-network">5G · T-Mobile</span>
+            </div>
+            <div class="plan-name" id="tele-plan">Magenta Max</div>
+            <div class="phone-num" id="tele-phone">+1 (206) 555-0147</div>
+            <div>
+              <div class="sim-pill"><span style="width:4px;height:4px;border-radius:50%;background:#e31837"></span>SIM registered</div>
+              <div class="net-verified-pill"><span style="width:4px;height:4px;border-radius:50%;background:var(--teal)"></span>Network verified</div>
+            </div>
+          </div>
+          <div id="home-menu-bank" style="margin-bottom:12px">
+            <div class="menu-lbl">Quick Actions</div>
+            <div class="mitem"><div class="micon" style="background:rgba(74,158,255,.1)">💳</div><div class="mtxt"><div class="mtitle">Cards</div><div class="msub">Manage cards</div></div><span class="marrow">›</span></div>
+            <div class="mitem"><div class="micon" style="background:rgba(74,158,255,.1)">↕️</div><div class="mtxt"><div class="mtitle">Transfer</div><div class="msub">Send money</div></div><span class="marrow">›</span></div>
+          </div>
+          <div id="home-menu-telecom" style="margin-bottom:12px;display:none">
+            <div class="menu-lbl">Account</div>
+            <div class="mitem"><div class="micon" style="background:rgba(227,24,55,.1)">📱</div><div class="mtxt"><div class="mtitle">My Plan</div><div class="msub" id="tele-plan-sub">Magenta Max</div></div><span class="marrow">›</span></div>
+            <div class="mitem"><div class="micon" style="background:rgba(227,24,55,.1)">📶</div><div class="mtxt"><div class="mtitle">Network</div><div class="msub">5G coverage active</div></div><span class="marrow">›</span></div>
+          </div>
+          <div>
+            <div class="menu-lbl">Identity Services</div>
+            <div class="mitem hl" onclick="goTo('s-getcode')">
+              <div class="micon" style="background:var(--teal-dim)">🔐</div>
+              <div class="mtxt"><div class="mtitle" style="color:var(--teal)">Digital Identity</div><div class="msub">SMART Token — New</div></div>
+              <span class="marrow" style="color:var(--teal)">›</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="pane">
+      <div class="pane-lbl"><div class="pane-dot" style="background:#555"></div>Social profile — unverified</div>
+      <div class="phone" id="socialPhone1"><!-- filled by JS --></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ STEP 2 — GET OWNERSHIP CODE FROM PLATFORM ═══ -->
+<section class="scene" id="s-getcode">
+  <div class="nar">
+    <span class="nar-step">STEP 02</span>
+    <div class="nar-txt"><strong>First — get an ownership code from the platform.</strong> Log into the social platform and request a SMART ownership code. This proves to the bank that you actually own this profile — not just that you know the URL.</div>
+    <div class="nar-btns">
+      <button class="bn" onclick="goTo('s-bank')">← Back</button>
+      <button class="bn p" onclick="goTo('s-pick')">I have my code →</button>
+    </div>
+  </div>
+  <div class="split">
+    <div class="pane">
+      <div class="pane-lbl"><div class="pane-dot" style="background:#4a9eff"></div>Social platform — Settings → SMART Identity</div>
+      <div class="phone">
+        <div class="pbar"><div style="font-size:11px;color:var(--txt3)">◀</div><div class="pbar-title" id="getcode-platbar">LinkedIn</div><div id="getcode-platlogo" style="margin-left:auto"></div></div>
+        <div class="pbody" style="padding:14px">
+          <div style="background:var(--surf2);border:1px solid var(--brd);border-radius:9px;padding:12px;margin-bottom:12px">
+            <div style="font-size:11px;font-weight:700;margin-bottom:4px">Your profile</div>
+            <div style="font-size:10px;color:var(--txt2);font-family:var(--fm)" id="getcode-profile-url">linkedin.com/in/sivakumar</div>
+            <div style="font-size:10px;color:var(--txt3);font-family:var(--fm);margin-top:2px">Profile UID: <span id="getcode-uid" style="color:var(--teal)">LI-9x4z8k21</span></div>
+          </div>
+          <div style="font-size:10px;color:var(--txt2);line-height:1.6;margin-bottom:12px">
+            To verify your identity via SMART Token, the platform generates a one-time ownership code. This code is tied to your profile UID — not just your URL. Only someone logged into this account can generate it.
+          </div>
+          <div style="background:var(--teal-dim);border:1px solid rgba(0,212,168,.2);border-radius:9px;padding:12px;margin-bottom:12px;display:none" id="code-generated-block">
+            <div style="font-size:10px;font-weight:700;color:var(--teal);margin-bottom:6px">Ownership code generated</div>
+            <div style="font-family:var(--fm);font-size:18px;font-weight:700;color:var(--teal);letter-spacing:.12em;text-align:center;padding:8px 0" id="ownership-code-display">OC-LI-7x9k2m</div>
+            <div style="font-size:9px;color:var(--txt3);text-align:center;font-family:var(--fm)">Valid for 15 minutes · Single use · Tied to your profile UID</div>
+            <div style="font-size:9px;color:var(--txt3);margin-top:6px;line-height:1.5">Take this code to your bank app. The bank will use it to confirm you own this profile before issuing your SMART token.</div>
+          </div>
+          <button class="btn-full btn-teal" id="btnGenCode" onclick="generateOwnershipCode()" style="font-size:12px">Generate ownership code</button>
+        </div>
+      </div>
+    </div>
+    <div class="pane">
+      <div class="pane-lbl"><div class="pane-dot" style="background:#555"></div>Why this step matters</div>
+      <div style="max-width:300px;margin:0 auto">
+        <div class="info-box" style="margin-bottom:12px">
+          <div style="color:var(--red);margin-bottom:8px;font-weight:600">Without ownership verification</div>
+          <div style="color:var(--txt3);line-height:1.7">Anyone could type:<br><span style="font-family:var(--fm);color:var(--red)">linkedin.com/in/bill-gates</span><br>and get a SMART token scoped to someone else's profile.</div>
+        </div>
+        <div class="info-box">
+          <div style="color:var(--teal);margin-bottom:8px;font-weight:600">With ownership verification</div>
+          <div style="color:var(--txt3);line-height:1.7">The bank receives:<br><span style="font-family:var(--fm);color:var(--teal)">code: OC-LI-7x9k2m<br>uid: LI-9x4z8k21</span><br>Only someone logged in as that profile can generate this. The token is cryptographically bound to the UID — not the URL.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ STEP 3 — PLATFORM PICKER (now with ownership code) ═══ -->
+<section class="scene" id="s-pick">
+  <div class="nar">
+    <span class="nar-step">STEP 03</span>
+    <div class="nar-txt"><strong>Bank app — paste your ownership code.</strong> Select the platform, paste the ownership code from Step 2. The bank validates your KYC identity <em>and</em> that the code proves you own that profile. Your profile UID is locked into the token.</div>
+    <div class="nar-btns">
+      <button class="bn" onclick="goTo('s-getcode')">← Back</button>
+    </div>
+  </div>
+  <div class="split">
+    <div class="pane">
+      <div class="pane-lbl"><div class="pane-dot" style="background:#4a9eff"></div>Bank app — Request SMART Token</div>
+      <div class="phone">
+        <div class="pbar"><div class="pback" onclick="goTo('s-bank')">‹</div><div class="pbar-title" id="pickBankTitle">ABC Bank</div></div>
+        <div class="pbody" style="padding:14px;overflow-y:auto">
+
+          <!-- KYC identity display — all locked -->
+          <div style="background:var(--teal-dim);border:1px solid rgba(0,212,168,.2);border-radius:9px;padding:9px 11px;margin-bottom:10px;display:flex;align-items:center;gap:8px">
+            <div style="width:6px;height:6px;border-radius:50%;background:var(--teal);flex-shrink:0"></div>
+            <div>
+              <div style="font-size:11px;font-weight:700;color:var(--teal)" id="kycBannerTitle">Identity on file</div>
+              <div style="font-size:10px;color:var(--txt2)" id="kycLine">Siva Kumar · KYC 2021</div>
+              <div style="font-size:9px;color:var(--txt3);display:none;font-family:var(--fm)" id="kycTeleExtra">SIM-registered · Network verified</div>
+            </div>
+            <span style="margin-left:auto;font-size:13px">🔒</span>
+          </div>
+          <div style="background:var(--surf2);border-radius:9px;padding:10px;border:1px solid var(--brd);margin-bottom:12px">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 12px">
+              <div><div style="font-size:9px;color:var(--txt3);font-family:var(--fm);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">Name</div><div style="font-size:12px;font-weight:600" id="kyc-name-disp">Siva Kumar</div></div>
+              <div><div style="font-size:9px;color:var(--txt3);font-family:var(--fm);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">Sex</div><div style="font-size:12px;font-weight:600" id="kyc-sex-disp">Male</div></div>
+              <div><div style="font-size:9px;color:var(--txt3);font-family:var(--fm);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">Age range</div><div style="font-size:12px;font-weight:600" id="kyc-age-disp">35–44</div></div>
+              <div><div style="font-size:9px;color:var(--txt3);font-family:var(--fm);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">Country</div><div style="font-size:12px;font-weight:600" id="kyc-country-disp">USA</div></div>
+              <div style="grid-column:1/-1"><div style="font-size:9px;color:var(--txt3);font-family:var(--fm);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">Profession</div><div style="font-size:12px;font-weight:600" id="kyc-prof-disp">Product Innovator</div></div>
+            </div>
+          </div>
+
+          <!-- Platform list — tap to expand URL input -->
+          <div style="font-size:10px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.08em;font-family:var(--fm);margin-bottom:4px">Select platform &amp; paste ownership code</div>
+          <div style="font-size:10px;color:var(--txt3);margin-bottom:8px;line-height:1.5">You got this code from the platform in the previous step. It proves you own that profile.</div>
+
+          <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px">
+
+            <div id="pc0" onclick="selPlat(0,this)" style="background:var(--surf2);border:1px solid var(--brd2);border-radius:10px;padding:10px;cursor:pointer;transition:all .18s">
+              <div style="display:flex;align-items:center;gap:9px">
+                <div style="width:30px;height:30px;border-radius:7px;background:#1877f2;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg></div>
+                <div style="flex:1"><div style="font-size:12px;font-weight:600">Facebook</div><div style="font-size:10px;color:var(--txt2)" id="ph0">facebook.com/yourname</div></div>
+                <div style="font-size:10px;color:var(--txt3)" id="pa0">tap</div>
+              </div>
+              <div id="url-row-0" style="display:none;margin-top:9px;padding-top:9px;border-top:1px solid var(--brd)" onclick="event.stopPropagation()">
+                <div style="font-size:10px;color:var(--teal);font-weight:600;font-family:var(--fm);margin-bottom:4px">Facebook ownership code from platform</div>
+                <div style="font-size:10px;color:var(--txt3);margin-bottom:6px;line-height:1.4">Paste the code the platform gave you. It includes your profile UID and expires in 15 min.</div>
+                <div style="display:flex;align-items:center;gap:4px;background:var(--surf3);border:1px solid var(--brd2);border-radius:6px;padding:0 8px">
+                  <span style="font-size:10px;color:var(--txt3);font-family:var(--fm);white-space:nowrap">OC-FB-</span>
+                  <input id="url-0" style="flex:1;background:transparent;border:none;padding:7px 0;font-size:11px;color:var(--teal);font-family:var(--fm);outline:none;letter-spacing:.05em" placeholder="xxxxxxxx" maxlength="8" oninput="updateScope(0)">
+                </div>
+                <div style="font-size:9px;color:var(--txt3);margin-top:5px;font-family:var(--fm)">Profile UID locked into token · Cannot be reused on another profile</div>
+              </div>
+            </div>
+
+            <div id="pc1" onclick="selPlat(1,this)" style="background:var(--surf2);border:1px solid var(--brd2);border-radius:10px;padding:10px;cursor:pointer;transition:all .18s">
+              <div style="display:flex;align-items:center;gap:9px">
+                <div style="width:30px;height:30px;border-radius:7px;background:#000;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="13" height="13" viewBox="0 0 24 24" fill="white"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.747l7.73-8.835L1.254 2.25H8.08l4.259 5.631zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></div>
+                <div style="flex:1"><div style="font-size:12px;font-weight:600">X (Twitter)</div><div style="font-size:10px;color:var(--txt2)" id="ph1">x.com/@yourhandle</div></div>
+                <div style="font-size:10px;color:var(--txt3)" id="pa1">tap</div>
+              </div>
+              <div id="url-row-1" style="display:none;margin-top:9px;padding-top:9px;border-top:1px solid var(--brd)" onclick="event.stopPropagation()">
+                <div style="font-size:10px;color:var(--teal);font-weight:600;font-family:var(--fm);margin-bottom:4px">X ownership code from platform</div>
+                <div style="font-size:10px;color:var(--txt3);margin-bottom:6px;line-height:1.4">Paste the code the platform gave you. It includes your profile UID and expires in 15 min.</div>
+                <div style="display:flex;align-items:center;gap:4px;background:var(--surf3);border:1px solid var(--brd2);border-radius:6px;padding:0 8px">
+                  <span style="font-size:10px;color:var(--txt3);font-family:var(--fm);white-space:nowrap">OC-TW-</span>
+                  <input id="url-1" style="flex:1;background:transparent;border:none;padding:7px 0;font-size:11px;color:var(--teal);font-family:var(--fm);outline:none;letter-spacing:.05em" placeholder="xxxxxxxx" maxlength="8" oninput="updateScope(1)">
+                </div>
+                <div style="font-size:9px;color:var(--txt3);margin-top:5px;font-family:var(--fm)">Profile UID locked into token · Cannot be reused on another profile</div>
+              </div>
+            </div>
+
+            <div id="pc2" onclick="selPlat(2,this)" style="background:var(--surf2);border:1px solid var(--brd2);border-radius:10px;padding:10px;cursor:pointer;transition:all .18s">
+              <div style="display:flex;align-items:center;gap:9px">
+                <div style="width:30px;height:30px;border-radius:7px;background:linear-gradient(135deg,#0077b5,#00a0dc);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></div>
+                <div style="flex:1"><div style="font-size:12px;font-weight:600">LinkedIn</div><div style="font-size:10px;color:var(--txt2)" id="ph2">linkedin.com/in/yourname</div></div>
+                <div style="font-size:10px;color:var(--txt3)" id="pa2">tap</div>
+              </div>
+              <div id="url-row-2" style="display:none;margin-top:9px;padding-top:9px;border-top:1px solid var(--brd)" onclick="event.stopPropagation()">
+                <div style="font-size:10px;color:var(--teal);font-weight:600;font-family:var(--fm);margin-bottom:4px">LinkedIn ownership code from platform</div>
+                <div style="font-size:10px;color:var(--txt3);margin-bottom:6px;line-height:1.4">Paste the code the platform gave you. It includes your profile UID and expires in 15 min.</div>
+                <div style="display:flex;align-items:center;gap:4px;background:var(--surf3);border:1px solid var(--brd2);border-radius:6px;padding:0 8px">
+                  <span style="font-size:10px;color:var(--txt3);font-family:var(--fm);white-space:nowrap">OC-LI-</span>
+                  <input id="url-2" style="flex:1;background:transparent;border:none;padding:7px 0;font-size:11px;color:var(--teal);font-family:var(--fm);outline:none;letter-spacing:.05em" placeholder="xxxxxxxx" maxlength="8" oninput="updateScope(2)">
+                </div>
+                <div style="font-size:9px;color:var(--txt3);margin-top:5px;font-family:var(--fm)">Profile UID locked into token · Cannot be reused on another profile</div>
+              </div>
+            </div>
+
+            <div id="pc3" onclick="selPlat(3,this)" style="background:var(--surf2);border:1px solid var(--brd2);border-radius:10px;padding:10px;cursor:pointer;transition:all .18s">
+              <div style="display:flex;align-items:center;gap:9px">
+                <div style="width:30px;height:30px;border-radius:7px;background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg></div>
+                <div style="flex:1"><div style="font-size:12px;font-weight:600">Instagram</div><div style="font-size:10px;color:var(--txt2)" id="ph3">instagram.com/@yourname</div></div>
+                <div style="font-size:10px;color:var(--txt3)" id="pa3">tap</div>
+              </div>
+              <div id="url-row-3" style="display:none;margin-top:9px;padding-top:9px;border-top:1px solid var(--brd)" onclick="event.stopPropagation()">
+                <div style="font-size:10px;color:var(--teal);font-weight:600;font-family:var(--fm);margin-bottom:4px">Instagram ownership code from platform</div>
+                <div style="font-size:10px;color:var(--txt3);margin-bottom:6px;line-height:1.4">Paste the code the platform gave you. It includes your profile UID and expires in 15 min.</div>
+                <div style="display:flex;align-items:center;gap:4px;background:var(--surf3);border:1px solid var(--brd2);border-radius:6px;padding:0 8px">
+                  <span style="font-size:10px;color:var(--txt3);font-family:var(--fm);white-space:nowrap">OC-IG-</span>
+                  <input id="url-3" style="flex:1;background:transparent;border:none;padding:7px 0;font-size:11px;color:var(--teal);font-family:var(--fm);outline:none;letter-spacing:.05em" placeholder="xxxxxxxx" maxlength="8" oninput="updateScope(3)">
+                </div>
+                <div style="font-size:9px;color:var(--txt3);margin-top:5px;font-family:var(--fm)">Profile UID locked into token · Cannot be reused on another profile</div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Optional disclosures -->
+          <div class="opt-box">
+            <div class="opt-ttl">What to disclose publicly</div>
+            <div class="opt-grid">
+              <label class="opt-item"><input type="checkbox" id="op-country" checked> Country</label>
+              <label class="opt-item"><input type="checkbox" id="op-city"> City</label>
+              <label class="opt-item"><input type="checkbox" id="op-age"> Exact age</label>
+              <label class="opt-item"><input type="checkbox" id="op-prof" checked> Profession</label>
+            </div>
+          </div>
+
+          <!-- Issue Token inside bank phone -->
+          <button class="btn-full btn-teal" id="btnIssue" onclick="issueToken()" disabled style="opacity:.35;margin-bottom:6px">
+            Issue SMART Token
+          </button>
+          <div style="font-size:10px;color:var(--txt3);text-align:center" id="issueHint">Select a platform and paste your ownership code</div>
+
+          <!-- hidden compat fields -->
+          <input type="hidden" id="f-name"><input type="hidden" id="f-age">
+          <input type="hidden" id="f-sex"><input type="hidden" id="f-prof">
+          <input type="hidden" id="f-country"><input type="hidden" id="f-city">
+        </div>
+      </div>
+    </div>
+    <div class="pane">
+      <div class="pane-lbl"><div class="pane-dot" style="background:#555"></div>Token payload preview</div>
+      <div class="info-box">
+        <div style="color:var(--txt3);margin-bottom:8px">// Signed by bank · platform only sees what is listed here</div>
+        <div><span style="color:var(--teal)">"iss"</span>: <span id="pp-iss" style="color:var(--amber)">"ABC Bank"</span>,</div>
+        <div><span style="color:var(--teal)">"name"</span>: <span id="pp-name" style="color:var(--amber)">"Siva Kumar"</span>,</div>
+        <div><span style="color:var(--teal)">"age_range"</span>: <span id="pp-age" style="color:var(--amber)">"35–44"</span>,</div>
+        <div><span style="color:var(--teal)">"sex"</span>: <span id="pp-sex" style="color:var(--amber)">"Male"</span>,</div>
+        <div><span style="color:var(--teal)">"platform"</span>: <span id="pp-plat" style="color:var(--amber)">"— select platform —"</span>,</div>
+        <div><span style="color:var(--teal)">"scope"</span>: <span id="pp-scope" style="color:var(--amber)">"— paste ownership code —"</span>,</div>
+        <div><span style="color:var(--teal)">"optional"</span>: <span id="pp-opts" style="color:var(--amber)">["country","profession"]</span></div>
+        <div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--brd)">
+          <div style="color:var(--lr);margin-bottom:4px">⛔ Never sent to platform:</div>
+          <div style="color:var(--txt3)">Date of birth · Account number</div>
+          <div style="color:var(--txt3)">Home address · Full financial data</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ STEP 3 — TOKEN ISSUED ═══ -->
+<section class="scene" id="s-token">
+  <div class="nar">
+    <span class="nar-step">STEP 03</span>
+    <div class="nar-txt"><strong>Token issued and signed.</strong> Your bank has created a cryptographically signed token scoped to the platform you chose. Send it to the platform — exactly like pasting an OAuth auth code.</div>
+    <div class="nar-btns">
+      <button class="bn" onclick="goTo('s-pick')">← Back</button>
+      <button class="bn p" onclick="sendToken()">Send to platform →</button>
+    </div>
+  </div>
+  <div class="split">
+    <div class="pane">
+      <div class="pane-lbl"><div class="pane-dot" style="background:#4a9eff"></div>Bank app — Token ready</div>
+      <div class="phone">
+        <div class="pbar"><div class="pback" onclick="goTo('s-pick')">‹</div><div class="pbar-title">SMART Token</div></div>
+        <div class="pbody">
+          <div class="tok-card">
+            <div class="tok-hdr">
+              <div class="tok-dot" id="t3-dot"></div>
+              <div class="tok-title" id="t3-title">SMART TOKEN — ACTIVE</div>
+              <div class="tok-id" id="t3-id"></div>
+            </div>
+            <div class="tfield"><span class="tk">issuer</span><span class="tv" id="t3-iss"></span></div>
+            <div class="tfield"><span class="tk">name</span><span class="tv" id="t3-name"></span></div>
+            <div class="tfield"><span class="tk">age_range</span><span class="tv" id="t3-age"></span></div>
+            <div class="tfield"><span class="tk">sex</span><span class="tv" id="t3-sex"></span></div>
+            <div class="tfield"><span class="tk">platform</span><span class="tv" id="t3-plat"></span></div>
+            <div class="tfield"><span class="tk">scope</span><span class="tv" id="t3-scope" style="font-size:9px;word-break:break-all"></span></div>
+            <div class="tfield"><span class="tk">optional</span><span class="tv" id="t3-opts" style="font-size:10px"></span></div>
+            <div class="tfield"><span class="tk">expires</span><span class="tv" id="t3-exp"></span></div>
+            <div class="tok-sig" id="t3-sig"></div>
+          </div>
+          <button class="btn-full btn-teal" onclick="sendToken()">Send to <span id="sendBtnPlatName">platform</span> →</button>
+          <button class="btn-full btn-ghost" onclick="copyTok(this)">📋 Copy token string</button>
+        </div>
+      </div>
+    </div>
+    <div class="pane">
+      <div class="pane-lbl"><div class="pane-dot" style="background:#555"></div>Platform — awaiting token</div>
+      <div class="phone" id="socialPhone3"><!-- filled by JS --></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ STEP 4 — VERIFIED ═══ -->
+<section class="scene" id="s-verified">
+  <div class="nar">
+    <span class="nar-step">STEP 04</span>
+    <div class="nar-txt"><strong>Profile verified.</strong> The platform called back to your bank, confirmed the signature, and applied the SMART badge. Tap the badge to see your public identity card. Use the bank side to simulate a revocation.</div>
+    <div class="nar-btns">
+      <button class="bn" onclick="goTo('s-token')">← Back</button>
+      <button class="bn p" onclick="goTo('s-success')">See summary →</button>
+    </div>
+  </div>
+  <div class="split">
+    <div class="pane">
+      <div class="pane-lbl"><div class="pane-dot" style="background:#4a9eff"></div>Bank app — Digital Identity → Active tokens</div>
+      <div class="phone">
+        <div class="pbar"><div class="pback">‹</div><div class="pbar-title">Active Tokens</div></div>
+        <div class="pbody">
+          <!-- Account owner banner -->
+          <div style="display:flex;align-items:center;gap:9px;background:var(--surf2);border-radius:9px;padding:10px;margin-bottom:16px;border:1px solid var(--brd)">
+            <div id="v-av-bank" style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">SK</div>
+            <div>
+              <div style="font-size:12px;font-weight:600" id="v-bankname-display">Siva Kumar</div>
+              <div style="font-size:10px;color:var(--txt2)" id="v-bank-kyc-sub">ABC Bank · KYC Verified</div>
+            </div>
+            <div class="kyc-pill" style="margin-left:auto;margin-top:0">Active</div>
+          </div>
+
+          <!-- Token list header -->
+          <div style="font-size:10px;color:var(--txt3);font-family:var(--fm);text-transform:uppercase;letter-spacing:.09em;margin-bottom:8px">Linked platforms</div>
+
+          <!-- Active token row -->
+          <div id="v-tok-row" style="background:var(--surf2);border:1px solid rgba(0,212,168,.25);border-radius:10px;padding:12px;margin-bottom:10px">
+            <div style="display:flex;align-items:center;gap:9px;margin-bottom:10px">
+              <div id="v-plat-icon-small" style="width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;background:#1877f2;flex-shrink:0"></div>
+              <div style="flex:1">
+                <div style="font-size:12px;font-weight:600" id="v-tok-platname">Facebook</div>
+                <div style="font-size:10px;color:var(--txt2);font-family:var(--fm)" id="v-tok-scope">facebook.com/sk</div>
+              </div>
+              <div style="width:7px;height:7px;border-radius:50%;background:var(--teal);box-shadow:0 0 6px var(--teal)" id="v-tok-status-dot"></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;font-size:10px">
+              <div style="background:var(--surf3);border-radius:6px;padding:6px">
+                <div style="color:var(--txt3);margin-bottom:2px">Token ID</div>
+                <div style="font-family:var(--fm);color:var(--txt)" id="v-tok-id-small">SMT-—</div>
+              </div>
+              <div style="background:var(--surf3);border-radius:6px;padding:6px">
+                <div style="color:var(--txt3);margin-bottom:2px">Expires</div>
+                <div style="font-family:var(--fm);color:var(--txt)" id="v-tok-exp-small">—</div>
+              </div>
+            </div>
+            <div id="v-tok-status-bar" style="display:flex;align-items:center;justify-content:space-between">
+              <div style="font-size:10px;color:var(--teal);font-weight:600;display:flex;align-items:center;gap:4px" id="v-tok-active-label">
+                <span style="width:5px;height:5px;border-radius:50%;background:var(--teal)"></span> ACTIVE
+              </div>
+              <button class="btn-full btn-red" id="revokeBtnBank" style="width:auto;padding:5px 12px;font-size:11px;margin-bottom:0" onclick="revokeToken()">
+                Revoke token
+              </button>
+            </div>
+            <div id="v-tok-revoked-bar" style="display:none;font-size:10px;color:var(--red);font-weight:600;align-items:center;gap:4px;margin-top:6px">
+              <span style="width:5px;height:5px;border-radius:50%;background:var(--red)"></span> REVOKED — badge removed from platform
+            </div>
+          </div>
+
+          <div style="font-size:11px;color:var(--txt3);line-height:1.5;padding:8px;text-align:center">
+            Revoking removes your verified badge from the platform instantly. The platform receives <span style="font-family:var(--fm);color:var(--red)">"valid":false</span> on the next check.
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="pane">
+      <div class="pane-lbl"><div class="pane-dot" id="socialDot4" style="background:var(--teal)"></div>Platform — verified</div>
+      <div class="phone">
+        <div class="pbar"><div style="font-size:11px;color:var(--txt3)">◀</div><div class="pbar-title" id="v-platbar">Platform</div><div id="v-platlogo" style="margin-left:auto"></div></div>
+        <div class="pbody" style="padding:0">
+          <div class="soc-bar">
+            <div class="soc-brand" id="v-brand">V</div>
+            <div class="soc-search">Search...</div>
+          </div>
+          <div class="prof-cover"></div>
+          <div style="padding:0 14px 14px">
+            <div class="prof-av-wrap">
+              <div class="prof-av" id="v-pav">SK</div>
+            </div>
+            <div class="prof-name" id="v-pname">Siva Kumar</div>
+            <div class="prof-handle" id="v-phandle">@sivakumar</div>
+            <!-- SMART TICK BADGE — click to open identity card -->
+            <div id="v-badge-wrap" style="position:relative">
+              <div class="smart-tick" id="vBadge" onclick="toggleIdCard()">
+                <div class="tick-icon tick-verified pop" id="vTickIcon">
+                  <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
+                    <path d="M2.5 6l2.5 2.5L9.5 4" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </div>
+                <span class="tick-lbl tick-lbl-ok" id="vBadgeTxt">SMART verified</span>
+              </div>
+
+              <!-- Floating identity card — appears on badge click -->
+              <div class="id-card-popup" id="idCard">
+                <div class="icp-inner">
+                  <span class="icp-close" onclick="event.stopPropagation();closeIdCard()">✕</span>
+                  <div class="icp-header">
+                    <div class="icp-av" id="icp-av" style="background:linear-gradient(135deg,#1a3a5c,#0f2240);color:#4a9eff">SK</div>
+                    <div>
+                      <div class="icp-hname" id="icp-hname">Siva Kumar</div>
+                      <div class="icp-hlbl">
+                        <svg width="9" height="9" viewBox="0 0 12 12" fill="none"><path d="M2.5 6l2.5 2.5L9.5 4" stroke="#00d4a8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        Identity verified by bank
+                      </div>
+                    </div>
+                  </div>
+                  <div class="icp-body">
+                    <!-- Mandatory fields -->
+                    <div class="icp-row"><span class="icp-k">Full name</span><span class="icp-v" id="ic-name"></span></div>
+                    <div class="icp-row"><span class="icp-k">Age range</span><span class="icp-v" id="ic-age"></span></div>
+                    <div class="icp-row"><span class="icp-k">Sex</span><span class="icp-v" id="ic-sex"></span></div>
+                    <!-- Optional — shown only if shared -->
+                    <div class="icp-row" id="ic-country-row" style="display:none">
+                      <span class="icp-k">Country <span class="icp-opt-badge">shared</span></span>
+                      <span class="icp-v" id="ic-country-val"></span>
+                    </div>
+                    <div class="icp-row" id="ic-city-row" style="display:none">
+                      <span class="icp-k">City <span class="icp-opt-badge">shared</span></span>
+                      <span class="icp-v" id="ic-city-val">—</span>
+                    </div>
+                    <div class="icp-row" id="ic-age2-row" style="display:none">
+                      <span class="icp-k">Exact age <span class="icp-opt-badge">shared</span></span>
+                      <span class="icp-v" id="ic-age2"></span>
+                    </div>
+                    <div class="icp-row" id="ic-prof-row" style="display:none">
+                      <span class="icp-k">Profession <span class="icp-opt-badge">shared</span></span>
+                      <span class="icp-v" id="ic-prof"></span>
+                    </div>
+                  </div>
+                  <div class="icp-footer">
+                    <svg width="8" height="8" viewBox="0 0 12 12" fill="none"><path d="M2.5 6l2.5 2.5L9.5 4" stroke="#00d4a8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <span id="ic-footer">Verified via ABC Bank · Token active</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div id="revNotice" style="display:none">
+              <div style="background:var(--red-dim);border:1px solid rgba(255,71,87,.2);border-radius:8px;padding:9px;font-size:11px;color:var(--red);margin-top:6px">⚠ Token revoked by account holder. Identity unverified.</div>
+            </div>
+            <!-- API LOG -->
+            <div style="margin-top:10px">
+              <div style="font-size:10px;color:var(--txt3);font-family:var(--fm);margin-bottom:5px;text-transform:uppercase;letter-spacing:.08em">Verification API log</div>
+              <div class="api-log" id="apiLog">// Waiting for token...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ STEP 5 — SUCCESS ═══ -->
+<section class="scene" id="s-success">
+  <div class="ring">✓</div>
+  <h2 class="suc-h">Identity verified.</h2>
+  <p class="suc-p" id="sucTxt">Your SMART token is live. Real identity, minimal disclosure, full user control.</p>
+  <div class="sum-grid">
+    <div class="sum-c"><div class="sum-lbl">Trust Authority</div><div class="sum-val" id="sum-bank">NexaBank</div></div>
+    <div class="sum-c"><div class="sum-lbl">Platform</div><div class="sum-val" id="sum-plat">—</div></div>
+    <div class="sum-c"><div class="sum-lbl">PII exposed</div><div class="sum-val" style="color:var(--teal)">None</div></div>
+    <div class="sum-c"><div class="sum-lbl">Data shared</div><div class="sum-val" id="sum-data">Name + Age range + Sex</div></div>
+    <div class="sum-c"><div class="sum-lbl">Revocation</div><div class="sum-val">Instant via bank</div></div>
+    <div class="sum-c"><div class="sum-lbl">Expires</div><div class="sum-val" id="sum-exp">—</div></div>
+  </div>
+  <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+    <button class="btn-full btn-red" style="width:auto;padding:10px 22px" onclick="goTo('s-recovery')">⚠ Simulate account hack →</button>
+    <button class="btn-full btn-ghost" style="width:auto;padding:10px 22px" onclick="restart()">Start over</button>
+  </div>
+</section>
+
+<!-- ═══ STEP 6 — HACK RECOVERY SIMULATION ═══ -->
+<section class="scene" id="s-recovery">
+  <div class="nar">
+    <span class="nar-step">STEP 06</span>
+    <div class="nar-txt"><strong>Your account has been hacked.</strong> Walk through each step — bank on the left, social platform on the right. Watch the badge disappear the moment you revoke, then re-issue a fresh token.</div>
+    <div class="nar-btns">
+      <button class="bn" onclick="goTo('s-success')">← Back</button>
+      <button class="bn p" onclick="restart()">Restart demo</button>
+    </div>
+  </div>
+
+  <div class="rec-split">
+
+    <!-- ══ LEFT: BANK APP ══ -->
+    <div class="pane">
+      <div class="pane-lbl"><div class="pane-dot" style="background:#4a9eff"></div>Your bank app — Digital Identity</div>
+      <div class="phone">
+        <div class="pbar">
+          <div class="pback">‹</div>
+          <div class="pbar-title" id="rec-bank-title">ABC Bank</div>
+        </div>
+        <div class="pbody" style="padding:14px">
+
+          <!-- Alert -->
+          <div class="hack-alert">
+            <div class="hack-alert-icon">🚨</div>
+            <div>
+              <div class="hack-alert-title">Security alert</div>
+              <div class="hack-alert-body">Unauthorised login detected on your <strong id="rec-plat-name" style="color:var(--red)">platform</strong> account from IP 185.220.101.47 (Tor exit node)</div>
+            </div>
+          </div>
+
+          <!-- Recovery steps — clickable pills -->
+          <div style="font-size:10px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.08em;font-family:var(--fm);margin-bottom:8px">Recovery steps</div>
+
+          <div class="rec-step-pill active-step" id="rsp0" onclick="recStep(0)">
+            <div class="rsp-num rsp-num-active" id="rspn0">1</div>
+            <div class="rsp-txt">
+              <div class="rsp-title">View active tokens</div>
+              <div class="rsp-sub">See all linked platforms</div>
+            </div>
+            <div class="rsp-check" id="rspc0">✓</div>
+          </div>
+          <div class="rec-step-pill" id="rsp1" onclick="recStep(1)">
+            <div class="rsp-num rsp-num-pending" id="rspn1">2</div>
+            <div class="rsp-txt">
+              <div class="rsp-title">Revoke compromised token</div>
+              <div class="rsp-sub">Badge removed instantly</div>
+            </div>
+            <div class="rsp-check" id="rspc1">✓</div>
+          </div>
+          <div class="rec-step-pill" id="rsp2" onclick="recStep(2)">
+            <div class="rsp-num rsp-num-pending" id="rspn2">3</div>
+            <div class="rsp-txt">
+              <div class="rsp-title">Recover social account</div>
+              <div class="rsp-sub">Via platform support</div>
+            </div>
+            <div class="rsp-check" id="rspc2">✓</div>
+          </div>
+          <div class="rec-step-pill" id="rsp3" onclick="recStep(3)">
+            <div class="rsp-num rsp-num-pending" id="rspn3">4</div>
+            <div class="rsp-txt">
+              <div class="rsp-title">Re-issue new token</div>
+              <div class="rsp-sub">Fresh signature, new ID</div>
+            </div>
+            <div class="rsp-check" id="rspc3">✓</div>
+          </div>
+
+          <!-- Dynamic bank content panel -->
+          <div id="rec-bank-content" style="margin-top:12px">
+
+            <!-- Step 0: Token list -->
+            <div id="rb-s0">
+              <div style="font-size:10px;color:var(--txt3);font-family:var(--fm);text-transform:uppercase;letter-spacing:.08em;margin-bottom:7px">Linked platforms</div>
+              <div style="background:var(--surf2);border:1px solid rgba(255,71,87,.3);border-radius:9px;padding:10px">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+                  <div id="rec-plat-icon" style="width:26px;height:26px;border-radius:6px;background:#1877f2;display:flex;align-items:center;justify-content:center;flex-shrink:0"></div>
+                  <div style="flex:1">
+                    <div style="font-size:12px;font-weight:600" id="rec-plat-label">Facebook</div>
+                    <div style="font-size:10px;color:var(--txt2);font-family:var(--fm)" id="rec-tok-scope">facebook.com/...</div>
+                  </div>
+                  <div style="width:7px;height:7px;border-radius:50%;background:var(--red);box-shadow:0 0 6px rgba(255,71,87,.5)" id="rec-tok-dot"></div>
+                </div>
+                <div style="font-size:10px;color:var(--red);font-weight:600;margin-bottom:6px">⚠ Suspicious activity on this token</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;font-size:10px">
+                  <div style="background:var(--surf3);border-radius:5px;padding:5px"><div style="color:var(--txt3);margin-bottom:1px">Token ID</div><div style="font-family:var(--fm);color:var(--txt)" id="rec-tok-id">—</div></div>
+                  <div style="background:var(--surf3);border-radius:5px;padding:5px"><div style="color:var(--txt3);margin-bottom:1px">Status</div><div style="font-family:var(--fm);color:var(--teal)" id="rec-tok-status">ACTIVE</div></div>
+                </div>
+                <button class="btn-full btn-red" style="margin-top:8px;margin-bottom:0;padding:8px;font-size:11px" onclick="recStep(1)">Revoke this token →</button>
+              </div>
+            </div>
+
+            <!-- Step 1: Revoke confirmed -->
+            <div id="rb-s1" style="display:none">
+              <div style="background:var(--red-dim);border:1px solid rgba(255,71,87,.3);border-radius:9px;padding:12px;text-align:center">
+                <div style="font-size:20px;margin-bottom:6px">🔒</div>
+                <div style="font-size:12px;font-weight:700;color:var(--red);margin-bottom:4px">Token revoked</div>
+                <div style="font-size:10px;color:var(--txt2);margin-bottom:8px">Revocation broadcast to all platforms. Badge removed within seconds.</div>
+                <div class="api-log" style="text-align:left;font-size:9px" id="rec-revoke-log">—</div>
+              </div>
+              <button class="btn-full btn-ghost" style="margin-top:8px;font-size:11px" onclick="recStep(2)">Account secured — next →</button>
+            </div>
+
+            <!-- Step 2: Platform account recovery -->
+            <div id="rb-s2" style="display:none">
+              <div style="background:var(--surf2);border:1px solid var(--brd);border-radius:9px;padding:12px">
+                <div style="font-size:11px;font-weight:600;margin-bottom:8px">Recover your social account</div>
+                <div style="font-size:10px;color:var(--txt2);line-height:1.6;margin-bottom:10px">While SMART has already removed the verified badge, you still need to regain control of the account login via the platform. Use their standard recovery process.</div>
+                <div style="font-size:10px;font-family:var(--fm);color:var(--txt3);background:var(--surf3);border-radius:6px;padding:8px;line-height:1.8">
+                  <div id="rec-plat-recovery-text">1. Go to platform login page</div>
+                  <div>2. Use "Forgot password" or account recovery</div>
+                  <div>3. Verify via backup email / phone</div>
+                  <div style="color:var(--teal);margin-top:4px">✓ SMART token already revoked — hacker cannot use your verified badge</div>
+                </div>
+              </div>
+              <button class="btn-full btn-teal" style="margin-top:8px;font-size:11px" onclick="recStep(3)">Account recovered — re-issue token →</button>
+            </div>
+
+            <!-- Step 3: Re-issue new token -->
+            <div id="rb-s3" style="display:none">
+              <div style="background:var(--teal-dim);border:1px solid rgba(0,212,168,.3);border-radius:9px;padding:12px;text-align:center">
+                <div style="font-size:20px;margin-bottom:6px">🔐</div>
+                <div style="font-size:12px;font-weight:700;color:var(--teal);margin-bottom:4px">New SMART token issued</div>
+                <div style="font-size:10px;color:var(--txt2);margin-bottom:8px">Fresh signature. New token ID. Previous token permanently invalidated — even if the hacker kept a copy.</div>
+                <div style="font-size:10px;font-family:var(--fm);color:var(--txt3);background:var(--bg);border-radius:6px;padding:8px;text-align:left;line-height:1.7">
+                  <div><span style="color:var(--teal)">"token_id"</span>: "<span id="rec-new-tok-id">SMT-NEW</span>",</div>
+                  <div><span style="color:var(--teal)">"prev_token"</span>: <span style="color:var(--red)">"INVALIDATED"</span>,</div>
+                  <div><span style="color:var(--teal)">"status"</span>: <span style="color:var(--teal)">"ACTIVE"</span></div>
+                </div>
+              </div>
+              <button class="btn-full btn-teal" style="margin-top:8px;font-size:11px" onclick="recApplyNewToken()">Apply to profile →</button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ RIGHT: SOCIAL PLATFORM ══ -->
+    <div class="pane">
+      <div class="pane-lbl"><div class="pane-dot" id="rec-soc-dot" style="background:var(--red)"></div>Social platform — <span id="rec-soc-label">hacker active</span></div>
+      <div class="phone">
+        <div class="pbar">
+          <div style="font-size:11px;color:var(--txt3)">◀</div>
+          <div class="pbar-title" id="rec-soc-bar">Platform</div>
+          <div id="rec-soc-logo" style="margin-left:auto"></div>
+        </div>
+        <div class="pbody" style="padding:0">
+          <div class="soc-bar">
+            <div class="soc-brand" id="rec-brand">?</div>
+            <div class="soc-search">Search...</div>
+          </div>
+          <div class="prof-cover" style="background:linear-gradient(135deg,#2d1010,#1e0a0a)"></div>
+          <div style="padding:0 14px 14px">
+            <div class="prof-av-wrap">
+              <div class="v-tick-wrap">
+                <div class="prof-av" id="rec-pav" style="background:linear-gradient(135deg,#1a3a5c,#0f2240);color:#4a9eff">SK</div>
+                <div class="tick-icon tick-verified" id="rec-tick">
+                  <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2.5 6l2.5 2.5L9.5 4" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
+              </div>
+            </div>
+            <div class="prof-name" id="rec-pname">Siva Kumar</div>
+            <div class="prof-handle" id="rec-phandle">@sivakumar</div>
+
+            <!-- Hacker session indicator -->
+            <div class="soc-hacker-bar" id="hackerBar">
+              <div class="hs-pulse"></div>
+              <span>Hacker active — logged in from unknown device</span>
+            </div>
+
+            <!-- Badge state -->
+            <div style="margin-bottom:8px" id="rec-badge-wrap">
+              <div class="smart-tick" id="recSocBadge">
+                <div class="tick-icon tick-verified" id="recTickIcon">
+                  <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2.5 6l2.5 2.5L9.5 4" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
+                <span class="tick-lbl tick-lbl-ok" id="recBadgeTxt">SMART verified</span>
+              </div>
+            </div>
+
+            <!-- Hacker post -->
+            <div id="hackerPost" style="background:var(--red-dim);border:1px solid rgba(255,71,87,.2);border-radius:8px;padding:10px;margin-bottom:8px">
+              <div style="font-size:10px;color:var(--red);font-weight:700;margin-bottom:5px;display:flex;align-items:center;gap:4px">
+                <div class="hs-pulse"></div> Hacker post (using your verified identity)
+              </div>
+              <div style="font-size:11px;color:var(--txt2);line-height:1.5" id="hackerPostText">"Sending crypto to this wallet address, trust me I'm verified ✓"</div>
+              <div style="font-size:9px;color:var(--red);margin-top:5px">⚠ Fraudulent post using your SMART-verified badge</div>
+            </div>
+
+            <!-- API log -->
+            <div style="font-size:10px;color:var(--txt3);font-family:var(--fm);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">Platform verification log</div>
+            <div class="api-log" id="rec-api-log">// Token ACTIVE — hacker using verified badge</div>
+
+            <!-- Recovery success new token card -->
+            <div class="new-tok-card" id="rec-new-tok-card">
+              <div style="display:flex;align-items:center;gap:7px;margin-bottom:7px">
+                <div class="tick-icon tick-verified" style="width:16px;height:16px">
+                  <svg width="9" height="9" viewBox="0 0 12 12" fill="none"><path d="M2.5 6l2.5 2.5L9.5 4" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
+                <div style="font-size:11px;font-weight:700;color:var(--teal)">Identity re-verified</div>
+              </div>
+              <div style="font-size:10px;color:var(--txt2)">New token issued · <span id="rec-new-tok-label" style="font-family:var(--fm);color:var(--teal)">SMT-NEW</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<script>
+/* ─── DATA ─── */
+const PERSONAS = [
+  { name:'Siva Kumar', initials:'SK', dob:'1983-06-15', sex:'Male', bank:'ABC Bank', bankCode:'AB', bankColor:'#4a9eff', bankGrad:'linear-gradient(135deg,#1a3a5c,#0f2240)', bal:'$12,450.00', acct:'•••• •••• 4821', country:'United States', cityVal:'Nashville, TN', profession:'Product Innovator', kycYear:'2021',
+    defaultPlatIdx:2, /* LinkedIn */
+    handle:'siva-kumar-tpm', platHandle:'/in/siva-kumar-tpm', headline:'Principal TPM · AWS · Open to new roles', followers:'2,847', connections:'500+', platColor:'#0a66c2' },
+  { name:'Priya Mehta', initials:'PM', dob:'1990-03-22', sex:'Female', bank:'HDFC Bank', bankCode:'HB', bankColor:'#a970ff', bankGrad:'linear-gradient(135deg,#2d1a5c,#1a0f40)', bal:'₹8,24,500', acct:'•••• •••• 7731', country:'India', cityVal:'Mumbai', profession:'Software Engineer', kycYear:'2020',
+    defaultPlatIdx:0, /* Facebook */
+    handle:'priya.mehta.dev', platHandle:'priya.mehta.dev', friends:'843', platColor:'#1877f2' },
+  { name:'James Chen', initials:'JC', dob:'1988-11-08', sex:'Male', bank:'T-Mobile', bankCode:'TM', bankColor:'#e31837', bankGrad:'linear-gradient(135deg,#3a0a10,#1a0508)', bal:'$5,820.00', acct:'•••• •••• 3359', country:'United States', cityVal:'Seattle, WA', profession:'Software Engineer', kycYear:'2022', type:'telecom', phone:'+1 (206) 555-0147', plan:'Magenta Max', simSince:'Mar 2019', imsi:'310260••••••4721', networkVerified:true,
+    defaultPlatIdx:1, /* X (Twitter) */
+    handle:'jchen_dev', platHandle:'@jchen_dev', following:'312', followers:'1.2K', platColor:'#000' }
+];
+
+const PLATFORMS = [
+  { name:'Facebook', handle:'/siva.kumar', scope:'facebook.com/siva.kumar', color:'#1877f2', textColor:'#fff', brandChar:'f',
+    icon:`<svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>` },
+  { name:'X (Twitter)', handle:'@sivakumar', scope:'x.com/sivakumar', color:'#000', textColor:'#fff', brandChar:'𝕏',
+    icon:`<svg width="13" height="13" viewBox="0 0 24 24" fill="white"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.747l7.73-8.835L1.254 2.25H8.08l4.259 5.631zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>` },
+  { name:'LinkedIn', handle:'/in/sivakumar', scope:'linkedin.com/in/sivakumar', color:'#0077b5', textColor:'#fff', brandChar:'in',
+    icon:`<svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>` },
+  { name:'Instagram', handle:'@siva.kumar', scope:'instagram.com/siva.kumar', color:'linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)', textColor:'#fff', brandChar:'Ig',
+    icon:`<svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>` }
+];
+
+let persona = null;
+let platIdx = null;
+let tok = null;
+let revoked = false;
+
+/* ─── HELPERS ─── */
+function ageRange(dob){const a=new Date().getFullYear()-new Date(dob).getFullYear();const b=[[18,24],[25,34],[35,44],[45,54],[55,64]];for(const[l,h]of b)if(a>=l&&a<=h)return`${l}–${h}`;return'65+'}
+function exactAge(dob){return new Date().getFullYear()-new Date(dob).getFullYear()}
+function rh(n){return Array.from({length:n},()=>Math.floor(Math.random()*16).toString(16)).join('')}
+
+/* ─── PERSONA SELECT ─── */
+function selPersona(i, el){
+  persona = PERSONAS[i];
+  document.querySelectorAll('.p-card').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel');
+  const b = document.getElementById('btnStart');
+  b.disabled = false;
+  b.textContent = `Start as ${persona.name} →`;
+  // Show a preview of their default social platform on the right
+  renderSocialPhone('socialPhoneIntro', null, false);
+}
+
+/* ─── GENERATE OWNERSHIP CODE (simulates platform issuing a code) ─── */
+function generateOwnershipCode(){
+  if(!persona) return;
+  // Pick whichever platform is active in the getcode scene — default LinkedIn
+  const activePlatIdx = platIdx !== null ? platIdx : 2;
+  const pl = PLATFORMS[activePlatIdx];
+  const ocPrefix = OC_PREFIXES[activePlatIdx];
+  const code = rh(6).toUpperCase(); /* 6 hex chars = ownership code suffix */
+  const uid = mockUID(UID_PREFIXES[activePlatIdx]);
+
+  /* Store UID so issueToken can lock it into the token scope */
+  UID_MAP[activePlatIdx] = uid;
+
+  /* Update s-getcode UI */
+  const display = document.getElementById('ownership-code-display');
+  if(display) display.textContent = 'OC-' + ocPrefix + '-' + code;
+
+  const uidEl = document.getElementById('getcode-uid');
+  if(uidEl) uidEl.textContent = uid;
+
+  const block = document.getElementById('code-generated-block');
+  if(block) block.style.display = 'block';
+
+  const btn = document.getElementById('btnGenCode');
+  if(btn){ btn.textContent = 'Code generated — go to bank app →'; btn.onclick = ()=>goTo('s-pick'); }
+
+  /* Pre-fill the matching platform input in s-pick so user sees code auto-populated */
+  const inp = document.getElementById('url-'+activePlatIdx);
+  if(inp){
+    inp.value = code;
+    /* Auto-select that platform card */
+    const card = document.getElementById('pc'+activePlatIdx);
+    if(card) selPlat(activePlatIdx, card);
+    updateScope(activePlatIdx);
+  }
+}
+
+/* ─── INIT GETCODE SCENE — sets platform display based on what was selected ─── */
+function initGetcodeScene(){
+  const activePlatIdx = platIdx !== null ? platIdx : 2;
+  const pl = PLATFORMS[activePlatIdx];
+  set('getcode-platbar', pl.name);
+  /* Reset code block */
+  const block = document.getElementById('code-generated-block');
+  if(block) block.style.display = 'none';
+  const btn = document.getElementById('btnGenCode');
+  if(btn){ btn.textContent = 'Generate ownership code'; btn.onclick = generateOwnershipCode; }
+  const uidEl = document.getElementById('getcode-uid');
+  if(uidEl) uidEl.textContent = UID_PREFIXES[activePlatIdx] + '-????????';
+  const profileUrl = document.getElementById('getcode-profile-url');
+  if(profileUrl) profileUrl.textContent = pl.scope.replace('sivakumar', persona ? persona.initials.toLowerCase() : 'yourprofile');
+}
+
+/* ─── PLATFORM SELECT — expands inline URL input ─── */
+function selPlat(i, el){
+  // Collapse all other platform rows
+  [0,1,2,3].forEach(j => {
+    const row = document.getElementById('url-row-'+j);
+    const card = document.getElementById('pc'+j);
+    const arrow = document.getElementById('pa'+j);
+    if(j !== i){
+      if(row) row.style.display='none';
+      if(card){ card.style.borderColor='var(--brd2)'; card.style.background='var(--surf2)'; }
+      if(arrow) arrow.textContent='tap';
+    }
+  });
+
+  const selectedRow = document.getElementById('url-row-'+i);
+  const selectedCard = document.getElementById('pc'+i);
+  const selectedArrow = document.getElementById('pa'+i);
+  const alreadyOpen = selectedRow && selectedRow.style.display !== 'none';
+
+  if(alreadyOpen){
+    // Toggle off
+    selectedRow.style.display='none';
+    selectedCard.style.borderColor='var(--brd2)';
+    selectedCard.style.background='var(--surf2)';
+    if(selectedArrow) selectedArrow.textContent='tap';
+    platIdx = null;
+    checkIssueReady();
+    return;
+  }
+
+  // Open this one
+  platIdx = i;
+  if(selectedRow) selectedRow.style.display='block';
+  if(selectedCard){ selectedCard.style.borderColor='var(--teal)'; selectedCard.style.background='var(--teal-dim)'; }
+  if(selectedArrow) selectedArrow.textContent='✓';
+
+  const pl = PLATFORMS[i];
+  set('pp-plat', `"${pl.name}"`);
+
+  // Focus the URL input
+  setTimeout(()=>{ const inp = document.getElementById('url-'+i); if(inp) inp.focus(); }, 50);
+
+  checkIssueReady();
+}
+
+/* ─── URL INPUT — updates scope in payload preview ─── */
+/* ── Platform UID prefixes — stable internal IDs, not vanity URLs ── */
+const OC_PREFIXES  = ['FB','TW','LI','IG'];
+const UID_PREFIXES = ['FB','TW','LI','IG'];
+const UID_MAP = {}; /* populated when ownership code is generated */
+
+/* Generate a mock platform UID (stable internal ID like Facebook numeric user ID) */
+function mockUID(platPrefix){ return platPrefix + '-' + rh(8).toUpperCase(); }
+
+function updateScope(i){
+  if(platIdx !== i) return;
+  const inp = document.getElementById('url-'+i);
+  if(!inp) return;
+  const code = inp.value.trim().toUpperCase();
+  const valid = code.length === 8;
+  /* Show platform UID in payload preview once code entered */
+  const uid = UID_MAP[i] || (UID_PREFIXES[i] + '-????????');
+  set('pp-scope', valid ? `"${OC_PREFIXES[i]}-${code} → uid:${uid}"` : '"— paste ownership code —"');
+  const ph = document.getElementById('ph'+i);
+  if(ph) ph.textContent = valid ? `Code: OC-${OC_PREFIXES[i]}-${code}` : PLATFORMS[i].scope;
+  checkIssueReady();
+}
+
+/* ─── ENABLE ISSUE BUTTON when platform selected + URL entered ─── */
+function checkIssueReady(){
+  const btn = document.getElementById('btnIssue');
+  const hint = document.getElementById('issueHint');
+  if(platIdx === null){
+    if(btn){ btn.disabled=true; btn.style.opacity='.35'; }
+    if(hint) hint.textContent='Select a platform and paste your ownership code';
+    return;
+  }
+  const val = (document.getElementById('url-'+platIdx)||{}).value||'';
+  const ready = val.trim().length > 0;
+  if(btn){ btn.disabled=!ready; btn.style.opacity=ready?'1':'.35'; }
+  if(hint) hint.textContent = ready ? 'Tap to issue your signed SMART token' : 'Enter your profile URL to continue';
+}
+
+
+/* ─── START ─── */
+function startDemo(){
+  if(!persona) return;
+  const p = persona;
+  const isTelecom = p.type === 'telecom';
+
+  // ── Common header ──
+  set('bankTitle', p.bank); set('bankName', p.bank);
+  set('pickBankTitle', p.bank);
+  set('bankLogo', p.bankCode);
+  document.getElementById('bankLogo').style.background = p.bankGrad;
+  document.getElementById('bankLogo').style.color = isTelecom ? '#fff' : p.bankColor;
+  set('bankSubtitle', isTelecom ? 'Phone & Internet' : 'Personal Banking');
+
+  // ── Home pane label ──
+  set('home-pane-lbl', isTelecom ? 'Your T-Mobile app' : 'Your bank app');
+
+  // ── Step 1 narrative ──
+  const narTxt = document.getElementById('home-nar-txt');
+  if(narTxt){
+    if(isTelecom){
+      narTxt.innerHTML = '<strong>Open your T-Mobile app.</strong> T-Mobile verified your identity when you registered your SIM — government ID, address, and phone number. Navigate to Digital Identity to create a SMART token.';
+    } else {
+      narTxt.innerHTML = `<strong>Open your ${p.bank} app.</strong> You're already a verified customer — KYC was completed when you opened the account. Navigate to Digital Identity to create a SMART token.`;
+    }
+  }
+
+  // ── Dynamic home card: telecom vs bank ──
+  const cardBank = document.getElementById('home-card-bank');
+  const cardTele = document.getElementById('home-card-telecom');
+  const menuBank = document.getElementById('home-menu-bank');
+  const menuTele = document.getElementById('home-menu-telecom');
+  if(isTelecom){
+    if(cardBank) cardBank.style.display='none';
+    if(cardTele) cardTele.style.display='block';
+    if(menuBank) menuBank.style.display='none';
+    if(menuTele) menuTele.style.display='block';
+    // Populate telecom card
+    set('tele-plan', p.plan || 'Magenta Max');
+    set('tele-plan-sub', p.plan || 'Magenta Max');
+    set('tele-phone', p.phone || '+1 (000) 000-0000');
+    set('tele-network', '5G · T-Mobile');
+    // KYC line becomes "SIM-registered identity"
+    set('kycLine', `${p.name} · SIM registered ${p.simSince || p.kycYear}`);
+    set('kycBannerTitle', 'SIM-registered identity');
+    const te = document.getElementById('kycTeleExtra');
+    if(te) te.style.display='block';
+  } else {
+    if(cardBank) cardBank.style.display='block';
+    if(cardTele) cardTele.style.display='none';
+    if(menuBank) menuBank.style.display='block';
+    if(menuTele) menuTele.style.display='none';
+    set('bankBal', p.bal); set('bankAcct', p.acct);
+    set('kycLine', `${p.name} · KYC verified ${p.kycYear}`);
+    set('kycBannerTitle', 'Identity on file');
+    const te2 = document.getElementById('kycTeleExtra');
+    if(te2) te2.style.display='none';
+  }
+
+  // ── KYC display cards in Step 3 (read-only) ──
+  set('kyc-name-disp', p.name);
+  set('kyc-sex-disp', p.sex);
+  set('kyc-age-disp', ageRange(p.dob));
+  set('kyc-country-disp', p.country);
+  set('kyc-prof-disp', p.profession);
+
+  // For telecom: show SIM details in the "identity on file" block in Step 3
+  const kycBanner = document.getElementById('kycLine');
+  if(kycBanner && isTelecom){
+    // Already set above
+  }
+
+  // Hidden compat inputs
+  const fn=document.getElementById('f-name'); if(fn) fn.value=p.name;
+  const fa=document.getElementById('f-age'); if(fa) fa.value=ageRange(p.dob);
+  const fs=document.getElementById('f-sex'); if(fs) fs.value=p.sex;
+  const fp=document.getElementById('f-prof'); if(fp) fp.value=p.profession;
+  const fc=document.getElementById('f-country'); if(fc) fc.value=p.country;
+  const fci=document.getElementById('f-city'); if(fci) fci.value=p.cityVal;
+
+  // ── Payload preview ──
+  set('pp-iss', `"${p.bank}"`);
+  set('pp-name', `"${p.name}"`);
+  set('pp-age', `"${ageRange(p.dob)}"`);
+  set('pp-sex', `"${p.sex}"`);
+
+  // ── Auto-select persona's default platform ──
+  platIdx = p.defaultPlatIdx !== undefined ? p.defaultPlatIdx : 0;
+  // Pre-open that platform card's URL row
+  [0,1,2,3].forEach(j => {
+    const row = document.getElementById('url-row-'+j);
+    const card = document.getElementById('pc'+j);
+    const arrow = document.getElementById('pa'+j);
+    const inp = document.getElementById('url-'+j);
+    if(row) row.style.display='none';
+    if(card){ card.style.borderColor='var(--brd2)'; card.style.background='var(--surf2)'; }
+    if(arrow) arrow.textContent='tap';
+    if(inp) inp.value='';
+  });
+  // Re-open the auto-selected platform
+  const autoCard = document.getElementById('pc'+platIdx);
+  const autoRow = document.getElementById('url-row-'+platIdx);
+  const autoArrow = document.getElementById('pa'+platIdx);
+  if(autoCard){ autoCard.style.borderColor='var(--teal)'; autoCard.style.background='var(--teal-dim)'; }
+  if(autoRow) autoRow.style.display='block';
+  if(autoArrow) autoArrow.textContent='✓';
+  set('pp-plat', `"${PLATFORMS[platIdx].name}"`);
+  const btn=document.getElementById('btnIssue');
+  if(btn){ btn.disabled=true; btn.style.opacity='.35'; }
+
+  renderSocialPhone('socialPhone1', null, false);
+  goTo('s-bank');
+}
+
+/* ─── ISSUE TOKEN ─── */
+function issueToken(){
+  if(platIdx === null) return;
+  const p = persona;
+  const pl = PLATFORMS[platIdx];
+
+  // Read the ownership code the user pasted
+  const codeInput = document.getElementById('url-'+platIdx);
+  const ownershipCode = codeInput ? codeInput.value.trim().toUpperCase() : '';
+  // Platform UID was locked when the ownership code was generated in s-getcode
+  const platformUID = UID_MAP[platIdx] || mockUID(UID_PREFIXES[platIdx]);
+  // Scope is the platform UID — NOT the vanity URL — so the token cannot be applied to any other profile
+  const scope = `uid:${platformUID} code:OC-${OC_PREFIXES[platIdx]}-${ownershipCode}`;
+
+  const opts = [];
+  if(document.getElementById('op-country').checked) opts.push('country');
+  if(document.getElementById('op-city').checked) opts.push('city');
+  if(document.getElementById('op-age').checked) opts.push('exact_age');
+  if(document.getElementById('op-prof').checked) opts.push('profession');
+
+  const exp = new Date(); exp.setFullYear(exp.getFullYear()+1);
+  const tokenId = 'SMT-' + rh(8).toUpperCase();
+  const sig = 'eyJhbGc.' + rh(32) + '.' + rh(48);
+
+  tok = { name:p.name, initials:p.initials, ageR:ageRange(p.dob), exactAge:exactAge(p.dob),
+    sex:p.sex, bank:p.bank, bankColor:p.bankColor, bankGrad:p.bankGrad,
+    platIdx, platform:pl.name, scope,
+    platformUID, ownershipCode,
+    opts, prof:p.profession, exp, tokenId, sig,
+    handle: p.initials.toLowerCase(),
+    country:p.country, city:p.cityVal };
+  revoked = false;
+
+  // Fill token display step 3 only — v-* elements no longer exist (replaced by Active Tokens UI)
+  set('t3-iss', p.bank);
+  set('t3-name', p.name);
+  set('t3-age', tok.ageR);
+  set('t3-sex', p.sex);
+  set('t3-plat', pl.name);
+  set('t3-scope', scope);
+  set('t3-id', tokenId);
+  set('t3-opts', opts.length ? opts.join(', ') : 'none');
+  set('t3-exp', exp.toISOString().split('T')[0]);
+  set('t3-sig', sig);
+  set('sendBtnPlatName', pl.name);
+
+  renderSocialPhone('socialPhone3', tok, false);
+  goTo('s-token');
+}
+
+/* ─── SEND TOKEN ─── */
+function sendToken(){
+  const tf = document.getElementById('tokFly');
+  tf.style.display = 'block';
+  tf.classList.remove('fly');
+  void tf.offsetWidth;
+  tf.classList.add('fly');
+  setTimeout(()=>{
+    tf.style.display = 'none';
+    applyVerified();
+    goTo('s-verified');
+    updateProg(3);
+  }, 1400);
+}
+
+/* ─── APPLY VERIFIED ─── */
+function applyVerified(){
+  if(!tok) return;
+  const pl = PLATFORMS[tok.platIdx];
+
+  // ── Bank Active Tokens panel ──
+  const avBank = document.getElementById('v-av-bank');
+  if(avBank){ avBank.textContent=tok.initials; avBank.style.background=tok.bankGrad; avBank.style.color=tok.bankColor; }
+  set('v-bankname-display', tok.name);
+  const isTele = persona && persona.type === 'telecom';
+  set('v-bank-kyc-sub', `${tok.bank} · ${isTele ? 'SIM Verified' : 'KYC Verified'}`);
+
+  const platIconSmall = document.getElementById('v-plat-icon-small');
+  if(platIconSmall){
+    const solidColor = typeof pl.color==='string' && !pl.color.includes('gradient') ? pl.color : '#333';
+    platIconSmall.style.background = solidColor;
+    platIconSmall.innerHTML = pl.icon;
+  }
+  set('v-tok-platname', pl.name);
+  set('v-tok-scope', tok.scope);
+  set('v-tok-id-small', tok.tokenId);
+  set('v-tok-exp-small', tok.exp.toISOString().split('T')[0]);
+
+  // Reset revoke state in bank panel
+  const rBtn = document.getElementById('revokeBtnBank');
+  if(rBtn){ rBtn.style.display=''; rBtn.disabled=false; rBtn.textContent='Revoke token'; }
+  const activeLabel = document.getElementById('v-tok-active-label');
+  if(activeLabel){ activeLabel.style.display='flex'; activeLabel.style.color='var(--teal)'; }
+  const revokedBar = document.getElementById('v-tok-revoked-bar');
+  if(revokedBar) revokedBar.style.display='none';
+  const tokRow = document.getElementById('v-tok-row');
+  if(tokRow) tokRow.style.borderColor='rgba(0,212,168,.25)';
+  const statusDot = document.getElementById('v-tok-status-dot');
+  if(statusDot){ statusDot.style.background='var(--teal)'; statusDot.style.boxShadow='0 0 6px var(--teal)'; }
+  const statusBar = document.getElementById('v-tok-status-bar');
+  if(statusBar) statusBar.style.display='flex';
+
+  // ── Platform bar ──
+  set('v-platbar', pl.name);
+  set('v-brand', pl.brandChar || pl.name[0]);
+  document.getElementById('v-brand').style.color = typeof pl.color==='string' && !pl.color.includes('gradient') ? pl.color : '#fff';
+
+  // ── Profile ──
+  const av = document.getElementById('v-pav');
+  if(av){ av.textContent=tok.initials; av.style.background=tok.bankGrad; av.style.color=tok.bankColor; }
+  set('v-pname', tok.name);
+  set('v-phandle', pl.handle.replace('sivakumar', tok.handle).replace('siva.kumar', tok.handle));
+
+  // ── Identity card popup — mandatory + optional fields ──
+  set('ic-name', tok.name);
+  set('ic-age', tok.ageR);
+  set('ic-sex', tok.sex);
+  vis('ic-country-row', tok.opts.includes('country'));
+  set('ic-country-val', tok.country);
+  vis('ic-city-row', tok.opts.includes('city'));
+  set('ic-city-val', tok.city);
+  vis('ic-age2-row', tok.opts.includes('exact_age'));
+  set('ic-age2', tok.exactAge);
+  vis('ic-prof-row', tok.opts.includes('profession') && tok.prof);
+  set('ic-prof', tok.prof);
+  set('ic-footer', `Verified via ${tok.bank} · Token ${tok.tokenId} · Exp ${tok.exp.toISOString().split('T')[0]}`);
+
+  // ── Populate popup header (avatar + name) ──
+  const icpAv = document.getElementById('icp-av');
+  if(icpAv){ icpAv.textContent=tok.initials; icpAv.style.background=tok.bankGrad; icpAv.style.color=tok.bankColor; }
+  set('icp-hname', tok.name);
+
+  // ── Reset badge to verified tick state ──
+  document.getElementById('idCard').classList.remove('open');
+  document.getElementById('revNotice').style.display='none';
+  const badge = document.getElementById('vBadge');
+  if(badge){ badge.className='smart-tick'; }
+  const tickIcon = document.getElementById('vTickIcon');
+  if(tickIcon){ tickIcon.className='tick-icon tick-verified'; void tickIcon.offsetWidth; tickIcon.className='tick-icon tick-verified pop'; }
+  const tickLbl = document.getElementById('vBadgeTxt');
+  if(tickLbl){ tickLbl.className='tick-lbl tick-lbl-ok'; tickLbl.textContent='SMART verified'; }
+
+  // ── API log ──
+  const optStr = tok.opts.length ? tok.opts.map(o=>`\n  "${o}": ${o==='exact_age'?tok.exactAge:'"verified"'}`).join(',') : '';
+  document.getElementById('apiLog').innerHTML =
+    `<span class="lg">POST /smart/verify → 200 OK</span>\n{\n  "valid": true,\n  "platform_uid": "${tok.platformUID||'—'}",\n  "uid_match": true,\n  "name": "${tok.name}",\n  "age_range": "${tok.ageR}",\n  "sex": "${tok.sex}",${optStr}\n  "issuer": "${tok.bank}",\n  <span class="ld">"pii_exposed": false</span>\n}`;
+
+  // ── Summary ──
+  set('sum-bank', tok.bank);
+  set('sum-plat', tok.platform);
+  set('sum-data', ['Name','Age range','Sex',...tok.opts].join(' + '));
+  set('sum-exp', tok.exp.toISOString().split('T')[0]);
+  set('sucTxt', `Your SMART token from ${tok.bank} is live on ${tok.platform}. Real identity, minimal disclosure, full user control.`);
+
+  // ── Recovery scene ──
+  set('rec-plat-name', tok.platform);
+  set('newTokId', rh(8).toUpperCase());
+  // revokeResult removed — handled by initRecoveryScene
+}
+
+/* ─── TOGGLE / CLOSE ID CARD ─── */
+function toggleIdCard(){
+  if(revoked) return;
+  const card = document.getElementById('idCard');
+  card.classList.toggle('open');
+}
+function closeIdCard(){
+  document.getElementById('idCard').classList.remove('open');
+}
+// Close card when clicking outside
+document.addEventListener('click', function(e){
+  const card = document.getElementById('idCard');
+  const badge = document.getElementById('vBadge');
+  if(card && badge && !badge.contains(e.target) && !card.contains(e.target)){
+    card.classList.remove('open');
+  }
+});
+
+/* ─── REVOKE ─── */
+function revokeToken(){
+  performRevoke();
+}
+function simulateRevoke(){ recStep(1); }
+
+/* ─── RECOVERY SIMULATION ─── */
+let recCurrentStep = -1;
+
+function initRecoveryScene(){
+  if(!tok) return;
+  const pl = PLATFORMS[tok.platIdx];
+  recCurrentStep = -1;
+
+  // Bank side
+  set('rec-bank-title', tok.bank);
+  set('rec-plat-name', pl.name);
+  set('rec-plat-label', pl.name);
+  set('rec-tok-scope', tok.scope);
+  set('rec-tok-id', tok.tokenId);
+  set('rec-tok-status', 'ACTIVE');
+  document.getElementById('rec-tok-status').style.color='var(--teal)';
+  set('rec-new-tok-id', 'SMT-' + rh(8).toUpperCase());
+  set('rec-plat-recovery-text', '1. Go to ' + pl.name + ' login page');
+
+  const platIcon = document.getElementById('rec-plat-icon');
+  if(platIcon){
+    const c = typeof pl.color==='string'&&!pl.color.includes('gradient')?pl.color:'#333';
+    platIcon.style.background=c;
+    platIcon.innerHTML=pl.icon;
+  }
+
+  // Social side
+  const av = document.getElementById('rec-pav');
+  if(av){ av.textContent=tok.initials; av.style.background=tok.bankGrad; av.style.color=tok.bankColor; }
+  set('rec-pname', tok.name);
+  set('rec-phandle', tok.scope);
+  set('rec-soc-bar', pl.name);
+  const brand = document.getElementById('rec-brand');
+  if(brand){ brand.textContent=pl.brandChar||pl.name[0]; brand.style.color=typeof pl.color==='string'&&!pl.color.includes('gradient')?pl.color:'#fff'; }
+
+  // Hacker post text
+  set('hackerPostText', '"Sending crypto to this wallet, trust me — I am verified on ' + pl.name + '"');
+
+  // Reset all steps to pending
+  [0,1,2,3].forEach(i=>{
+    const pill=document.getElementById('rsp'+i);
+    const num=document.getElementById('rspn'+i);
+    const chk=document.getElementById('rspc'+i);
+    if(pill){ pill.className='rec-step-pill'+(i===0?' active-step':'')}
+    if(num){ num.className='rsp-num '+(i===0?'rsp-num-active':'rsp-num-pending'); num.textContent=i+1; }
+    if(chk) chk.className='rsp-check';
+  });
+
+  // Show step 0 content
+  ['rb-s0','rb-s1','rb-s2','rb-s3'].forEach((id,i)=>{
+    const el=document.getElementById(id);
+    if(el) el.style.display=i===0?'block':'none';
+  });
+
+  // Reset social side
+  document.getElementById('hackerBar').className='soc-hacker-bar';
+  document.getElementById('hackerPost').style.display='block';
+  const tick=document.getElementById('recTickIcon');
+  if(tick){ tick.className='tick-icon tick-verified'; }
+  const badgeTxt=document.getElementById('recBadgeTxt');
+  if(badgeTxt){ badgeTxt.className='tick-lbl tick-lbl-ok'; badgeTxt.textContent='SMART verified'; }
+  const recSocDot=document.getElementById('rec-soc-dot');
+  if(recSocDot) recSocDot.style.background='var(--red)';
+  set('rec-soc-label','hacker active');
+  document.getElementById('rec-api-log').innerHTML='// Token ACTIVE — hacker using verified badge';
+  const ntc=document.getElementById('rec-new-tok-card');
+  if(ntc) ntc.className='new-tok-card';
+}
+
+function recStep(step){
+  if(step === recCurrentStep) return;
+  recCurrentStep = step;
+
+  // Update step pills
+  [0,1,2,3].forEach(i=>{
+    const pill=document.getElementById('rsp'+i);
+    const num=document.getElementById('rspn'+i);
+    const chk=document.getElementById('rspc'+i);
+    if(i < step){
+      if(pill) pill.className='rec-step-pill done-step';
+      if(num){ num.className='rsp-num rsp-num-done'; num.textContent=i+1; }
+      if(chk) chk.className='rsp-check show';
+    } else if(i === step){
+      if(pill) pill.className='rec-step-pill active-step';
+      if(num){ num.className='rsp-num rsp-num-active'; num.textContent=i+1; }
+      if(chk) chk.className='rsp-check';
+    } else {
+      if(pill) pill.className='rec-step-pill';
+      if(num){ num.className='rsp-num rsp-num-pending'; num.textContent=i+1; }
+      if(chk) chk.className='rsp-check';
+    }
+  });
+
+  // Show/hide bank content panels
+  ['rb-s0','rb-s1','rb-s2','rb-s3'].forEach((id,i)=>{
+    const el=document.getElementById(id);
+    if(el) el.style.display=i===step?'block':'none';
+  });
+
+  // Social side changes per step
+  if(step === 1){
+    // REVOKE — badge turns red, hacker post greys out
+    const revAt = new Date().toISOString();
+    const tokId = tok ? tok.tokenId : '—';
+    document.getElementById('rec-api-log').innerHTML =
+      '<span class="lr">REVOCATION BROADCAST</span>\n{\n  "token_id": "' + tokId + '",\n  "status": "REVOKED",\n  "reason": "revoked_by_user",\n  "revoked_at": "' + revAt + '",\n  "valid": false\n}';
+    const tick=document.getElementById('recTickIcon');
+    if(tick) tick.className='tick-icon tick-revoked';
+    const badgeTxt=document.getElementById('recBadgeTxt');
+    if(badgeTxt){ badgeTxt.className='tick-lbl tick-lbl-rev'; badgeTxt.textContent='Token revoked'; }
+    document.getElementById('hackerPost').style.opacity='.4';
+    document.getElementById('hackerBar').innerHTML='<div style="width:6px;height:6px;border-radius:50%;background:var(--red);flex-shrink:0"></div><span>Hacker badge REMOVED — cannot post as verified</span>';
+    // Update token status in bank
+    set('rec-tok-status','REVOKED');
+    document.getElementById('rec-tok-status').style.color='var(--red)';
+    document.getElementById('rec-revoke-log').innerHTML=
+      '<span class="lr">TOKEN_REVOKED</span>\ntoken: ' + tokId + '\nstatus: REVOKED\neffect: badge_removed';
+    const recSocDot=document.getElementById('rec-soc-dot');
+    if(recSocDot) recSocDot.style.background='var(--amber)';
+    set('rec-soc-label','badge removed');
+  }
+
+  if(step === 2){
+    // Account recovery via platform
+    document.getElementById('hackerBar').className='soc-hacker-bar hidden';
+    document.getElementById('hackerPost').style.display='none';
+    document.getElementById('rec-api-log').innerHTML='// Platform account recovery in progress...';
+    const recSocDot=document.getElementById('rec-soc-dot');
+    if(recSocDot) recSocDot.style.background='var(--amber)';
+    set('rec-soc-label','account recovering');
+  }
+
+  if(step === 3){
+    // Fresh token issued
+    const newId = 'SMT-' + rh(8).toUpperCase();
+    set('rec-new-tok-id', newId);
+    set('rec-new-tok-label', newId);
+    const recSocDot=document.getElementById('rec-soc-dot');
+    if(recSocDot) recSocDot.style.background='var(--teal)';
+    set('rec-soc-label','ready to re-verify');
+    document.getElementById('rec-api-log').innerHTML='// New token ready — tap "Apply to profile" to restore badge';
+  }
+}
+
+function recApplyNewToken(){
+  const tick=document.getElementById('recTickIcon');
+  if(tick){ tick.className='tick-icon tick-verified'; void tick.offsetWidth; tick.className='tick-icon tick-verified pop'; }
+  const badgeTxt=document.getElementById('recBadgeTxt');
+  if(badgeTxt){ badgeTxt.className='tick-lbl tick-lbl-ok'; badgeTxt.textContent='SMART verified'; }
+  const ntc=document.getElementById('rec-new-tok-card');
+  if(ntc) ntc.className='new-tok-card show';
+  const newId = document.getElementById('rec-new-tok-id').textContent;
+  document.getElementById('rec-api-log').innerHTML=
+    '<span class="lg">POST /smart/verify → 200 OK</span>\n{\n  "valid": true,\n  "token_id": "'+newId+'",\n  "name": "'+tok.name+'",\n  "issuer": "'+tok.bank+'"\n}';
+  const recSocDot=document.getElementById('rec-soc-dot');
+  if(recSocDot) recSocDot.style.background='var(--teal)';
+  set('rec-soc-label','re-verified');
+
+  // Mark step 3 done
+  const chk3=document.getElementById('rspc3');
+  const num3=document.getElementById('rspn3');
+  const pill3=document.getElementById('rsp3');
+  if(chk3) chk3.className='rsp-check show';
+  if(num3){ num3.className='rsp-num rsp-num-done'; }
+  if(pill3) pill3.className='rec-step-pill done-step';
+}
+
+function performRevoke(){
+  revoked = true;
+
+  // ── Bank Active Tokens panel — update in place ──
+  const rBtn = document.getElementById('revokeBtnBank');
+  if(rBtn){ rBtn.style.display='none'; }
+
+  const activeLabel = document.getElementById('v-tok-active-label');
+  if(activeLabel) activeLabel.style.display='none';
+
+  const revokedBar = document.getElementById('v-tok-revoked-bar');
+  if(revokedBar){ revokedBar.style.display='flex'; }
+
+  const tokRow = document.getElementById('v-tok-row');
+  if(tokRow) tokRow.style.borderColor='rgba(255,71,87,.3)';
+
+  const statusDot = document.getElementById('v-tok-status-dot');
+  if(statusDot){ statusDot.style.background='var(--red)'; statusDot.style.boxShadow='0 0 6px var(--red)'; }
+
+  // ── Social badge → revoked tick state ──
+  const b = document.getElementById('vBadge');
+  if(b) b.className='smart-tick';
+  const ti = document.getElementById('vTickIcon');
+  if(ti){ ti.className='tick-icon tick-revoked'; }
+  const tl = document.getElementById('vBadgeTxt');
+  if(tl){ tl.className='tick-lbl tick-lbl-rev'; tl.textContent='Token revoked'; }
+  document.getElementById('idCard').classList.remove('open');
+  document.getElementById('revNotice').style.display='block';
+
+  // ── API log ──
+  document.getElementById('apiLog').innerHTML =
+    `<span class="lr">POST /smart/verify → 200</span>\n{\n  "valid": false,\n  "reason": "revoked_by_user",\n  "revoked_at": "${new Date().toISOString()}"\n}`;
+}
+
+/* ─── RENDER SOCIAL PHONE (unverified state) ─── */
+function renderSocialPhone(elId, tokData, verified){
+  const el = document.getElementById(elId);
+  if(!el) return;
+  const p = persona || {name:'Your Name', initials:'YN', bankColor:'#4a9eff', bankGrad:'linear-gradient(135deg,#1a3a5c,#0f2240)', defaultPlatIdx:0, handle:'user', platHandle:'user', headline:'', followers:'0', connections:'0', friends:'0', following:'0'};
+  const pi = tokData ? tokData.platIdx : (p.defaultPlatIdx !== undefined ? p.defaultPlatIdx : 0);
+
+  if(pi === 2) renderLinkedIn(el, p, tokData);
+  else if(pi === 0) renderFacebook(el, p, tokData);
+  else if(pi === 1) renderX(el, p, tokData);
+  else renderLinkedIn(el, p, tokData);
+}
+
+/* ── LINKEDIN ── */
+function renderLinkedIn(el, p, tokData){
+  const badge = tokData
+    ? `<div class="smart-tick" style="cursor:default"><div class="tick-icon tick-verified"><svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2.5 6l2.5 2.5L9.5 4" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="tick-lbl tick-lbl-ok" style="font-size:10px">SMART verified</span></div>`
+    : `<div style="display:inline-flex;align-items:center;gap:4px;font-size:9px;color:var(--txt3);background:var(--surf2);border:1px solid var(--brd);border-radius:4px;padding:2px 7px">Not verified</div>`;
+  el.innerHTML = `
+    <div style="background:#fff;border-radius:26px;overflow:hidden;max-width:300px;margin:0 auto;border:1px solid rgba(255,255,255,.1)">
+      <!-- Top bar -->
+      <div style="background:#0a66c2;padding:8px 12px;display:flex;align-items:center;justify-content:space-between">
+        <svg width="52" height="13" viewBox="0 0 84 21" fill="white"><path d="M1.5 2.7A1.8 1.8 0 0 1 3.3.9a1.8 1.8 0 0 1 1.8 1.8 1.8 1.8 0 0 1-1.8 1.8A1.8 1.8 0 0 1 1.5 2.7zm.3 3.9H4.8v11.7H1.8zm4.8 0h2.8v1.6c.7-1 1.8-1.9 3.5-1.9 2.5 0 3.9 1.7 3.9 4.4v7.6h-2.9v-7c0-1.5-.7-2.4-1.9-2.4s-2 .9-2 2.4v7h-3zm12 0h2.9v11.7h-2.9zm1.4-1.5a1.8 1.8 0 0 1-1.8-1.8A1.8 1.8 0 0 1 20 1.5a1.8 1.8 0 0 1 1.8 1.8 1.8 1.8 0 0 1-1.8 1.8zm4.7 1.5h2.8v1.6c.8-1 2-1.9 3.5-1.9 1.4 0 2.6.6 3.1 1.9 1-1.2 2.2-1.9 3.7-1.9 2.4 0 3.7 1.7 3.7 4.4v7.6h-3v-7c0-1.5-.6-2.4-1.8-2.4-1.1 0-1.8.9-1.8 2.4v7h-3v-7c0-1.5-.6-2.4-1.8-2.4-1.1 0-1.8.9-1.8 2.4v7h-3z"/></svg>
+        <div style="display:flex;gap:8px">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="rgba(255,255,255,.7)"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke="rgba(255,255,255,.7)" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="rgba(255,255,255,.7)"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+        </div>
+      </div>
+      <!-- Cover photo -->
+      <div style="height:52px;background:linear-gradient(135deg,#1a4a7a 0%,#0a66c2 50%,#003177 100%);position:relative">
+        <div style="position:absolute;bottom:-22px;left:12px;width:44px;height:44px;border-radius:50%;background:${p.bankGrad};border:3px solid #fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:${p.bankColor};font-family:var(--fd)">${p.initials}</div>
+      </div>
+      <div style="background:#fff;padding:28px 12px 10px">
+        <!-- Connect / Message buttons -->
+        <div style="display:flex;justify-content:flex-end;gap:6px;margin-bottom:8px">
+          <div style="background:#0a66c2;border-radius:20px;padding:3px 12px;font-size:9px;font-weight:700;color:#fff">Connect</div>
+          <div style="border:1px solid #0a66c2;border-radius:20px;padding:3px 12px;font-size:9px;font-weight:700;color:#0a66c2">Message</div>
+        </div>
+        <!-- Name & headline -->
+        <div style="font-size:13px;font-weight:700;color:#000;line-height:1.2;margin-bottom:2px">${p.name}</div>
+        <div style="font-size:10px;color:#333;margin-bottom:4px;line-height:1.3">${p.headline||'Product Innovator · Open to work'}</div>
+        <div style="font-size:9px;color:#666;margin-bottom:8px">${p.cityVal||'Nashville, TN'} · <span style="color:#0a66c2">${p.connections||'500+'} connections</span></div>
+        <!-- SMART badge -->
+        <div style="margin-bottom:8px">${badge}</div>
+        <!-- Stats row -->
+        <div style="border-top:1px solid #e0e0e0;padding-top:8px;display:flex;gap:0">
+          <div style="flex:1;text-align:center;border-right:1px solid #e0e0e0;padding:4px 0">
+            <div style="font-size:11px;font-weight:700;color:#000">${p.followers||'2,847'}</div>
+            <div style="font-size:9px;color:#666">followers</div>
+          </div>
+          <div style="flex:1;text-align:center;padding:4px 0">
+            <div style="font-size:11px;font-weight:700;color:#000">${p.connections||'500+'}</div>
+            <div style="font-size:9px;color:#666">connections</div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+/* ── FACEBOOK ── */
+function renderFacebook(el, p, tokData){
+  const badge = tokData
+    ? `<div class="smart-tick" style="cursor:default"><div class="tick-icon tick-verified"><svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2.5 6l2.5 2.5L9.5 4" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="tick-lbl tick-lbl-ok" style="font-size:10px">SMART verified</span></div>`
+    : `<div style="display:inline-flex;align-items:center;gap:4px;font-size:9px;color:var(--txt3);background:var(--surf2);border:1px solid var(--brd);border-radius:4px;padding:2px 7px">Not verified</div>`;
+  el.innerHTML = `
+    <div style="background:#f0f2f5;border-radius:26px;overflow:hidden;max-width:300px;margin:0 auto;border:1px solid rgba(0,0,0,.08)">
+      <!-- Top nav bar -->
+      <div style="background:#1877f2;padding:7px 12px;display:flex;align-items:center;justify-content:space-between">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+        <div style="background:rgba(255,255,255,.2);border-radius:20px;padding:3px 10px;display:flex;align-items:center;gap:4px">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="rgba(255,255,255,.8)"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35" stroke="rgba(255,255,255,.8)" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+          <span style="font-size:9px;color:rgba(255,255,255,.8)">Search</span>
+        </div>
+      </div>
+      <!-- Cover photo -->
+      <div style="height:80px;background:linear-gradient(135deg,#1877f2,#4267B2,#1a237e);position:relative">
+        <div style="position:absolute;bottom:-28px;left:12px;width:56px;height:56px;border-radius:50%;background:${p.bankGrad};border:3px solid #f0f2f5;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:${p.bankColor};font-family:var(--fd)">${p.initials}</div>
+      </div>
+      <!-- Profile body -->
+      <div style="background:#fff;padding:34px 12px 12px">
+        <div style="font-size:16px;font-weight:700;color:#050505;margin-bottom:2px">${p.name}</div>
+        <div style="font-size:10px;color:#65676b;margin-bottom:6px">${p.friends||'843'} friends · Lives in ${p.cityVal||'Mumbai'}</div>
+        <!-- SMART badge -->
+        <div style="margin-bottom:10px">${badge}</div>
+        <!-- Action buttons -->
+        <div style="display:flex;gap:6px;margin-bottom:10px">
+          <div style="flex:1;background:#1877f2;border-radius:6px;padding:5px 0;text-align:center;font-size:10px;font-weight:700;color:#fff">+ Add friend</div>
+          <div style="flex:1;background:#e4e6eb;border-radius:6px;padding:5px 0;text-align:center;font-size:10px;font-weight:700;color:#050505">Message</div>
+        </div>
+        <!-- Mini post preview -->
+        <div style="background:#f0f2f5;border-radius:8px;padding:8px;font-size:10px;color:#050505">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
+            <div style="width:24px;height:24px;border-radius:50%;background:${p.bankGrad};display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:${p.bankColor}">${p.initials}</div>
+            <div>
+              <div style="font-weight:700;font-size:9px;color:#050505">${p.name}</div>
+              <div style="font-size:8px;color:#65676b">2h · 🌐</div>
+            </div>
+          </div>
+          <div style="font-size:9px;color:#050505">Excited to share my latest project update! 🚀</div>
+        </div>
+      </div>
+    </div>`;
+}
+
+/* ── X (TWITTER) ── */
+function renderX(el, p, tokData){
+  const badge = tokData
+    ? `<div class="smart-tick" style="cursor:default"><div class="tick-icon tick-verified"><svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2.5 6l2.5 2.5L9.5 4" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="tick-lbl tick-lbl-ok" style="font-size:10px">SMART verified</span></div>`
+    : `<div style="display:inline-flex;align-items:center;gap:4px;font-size:9px;color:#71767b;background:#16181c;border:1px solid #2f3336;border-radius:4px;padding:2px 7px">Not verified</div>`;
+  el.innerHTML = `
+    <div style="background:#000;border-radius:26px;overflow:hidden;max-width:300px;margin:0 auto;border:1px solid #2f3336">
+      <!-- X header bar -->
+      <div style="background:#000;border-bottom:1px solid #2f3336;padding:8px 14px;display:flex;align-items:center;justify-content:space-between">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.747l7.73-8.835L1.254 2.25H8.08l4.259 5.631zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+        <div style="font-size:13px;font-weight:700;color:#fff">Profile</div>
+        <div style="width:28px;height:28px;border-radius:50%;background:#16181c;border:1px solid #2f3336;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff">${p.initials}</div>
+      </div>
+      <!-- Cover -->
+      <div style="height:64px;background:linear-gradient(135deg,#111,#1a1a1a,#111);position:relative">
+        <div style="position:absolute;bottom:-24px;left:12px;width:48px;height:48px;border-radius:50%;background:#000;border:3px solid #000;padding:2px">
+          <div style="width:100%;height:100%;border-radius:50%;background:${p.bankGrad};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:${p.bankColor};font-family:var(--fd)">${p.initials}</div>
+        </div>
+      </div>
+      <!-- Profile body -->
+      <div style="background:#000;padding:30px 14px 12px">
+        <!-- Follow button -->
+        <div style="display:flex;justify-content:flex-end;margin-bottom:8px">
+          <div style="border:1px solid #eff3f4;border-radius:20px;padding:4px 14px;font-size:10px;font-weight:700;color:#eff3f4">Follow</div>
+        </div>
+        <div style="font-size:14px;font-weight:700;color:#e7e9ea;margin-bottom:1px">${p.name}</div>
+        <div style="font-size:11px;color:#71767b;margin-bottom:6px">${p.platHandle||('@'+p.handle)}</div>
+        <div style="font-size:11px;color:#e7e9ea;margin-bottom:6px">Software Engineer · Building things · ${p.cityVal||'Seattle, WA'}</div>
+        <!-- SMART badge -->
+        <div style="margin-bottom:10px">${badge}</div>
+        <!-- Follower stats -->
+        <div style="display:flex;gap:14px;margin-bottom:10px">
+          <div style="font-size:11px;color:#71767b"><span style="font-weight:700;color:#e7e9ea">${p.following||'312'}</span> Following</div>
+          <div style="font-size:11px;color:#71767b"><span style="font-weight:700;color:#e7e9ea">${p.followers||'1.2K'}</span> Followers</div>
+        </div>
+        <!-- Tabs -->
+        <div style="display:flex;border-bottom:1px solid #2f3336;margin-bottom:8px">
+          <div style="flex:1;text-align:center;padding:8px 0;font-size:10px;font-weight:700;color:#e7e9ea;border-bottom:2px solid #1d9bf0">Posts</div>
+          <div style="flex:1;text-align:center;padding:8px 0;font-size:10px;color:#71767b">Replies</div>
+          <div style="flex:1;text-align:center;padding:8px 0;font-size:10px;color:#71767b">Media</div>
+        </div>
+        <!-- Mini post -->
+        <div style="display:flex;gap:8px">
+          <div style="width:32px;height:32px;border-radius:50%;background:${p.bankGrad};flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:${p.bankColor}">${p.initials}</div>
+          <div>
+            <div style="font-size:10px;font-weight:700;color:#e7e9ea">${p.name} <span style="font-weight:400;color:#71767b">· 4h</span></div>
+            <div style="font-size:10px;color:#e7e9ea;line-height:1.4;margin-top:2px">Just shipped a new feature 🚀 building in public</div>
+            <div style="display:flex;gap:12px;margin-top:6px">
+              <span style="font-size:9px;color:#71767b">💬 12</span>
+              <span style="font-size:9px;color:#71767b">🔁 34</span>
+              <span style="font-size:9px;color:#71767b">♥ 287</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+/* ─── COPY ─── */
+function copyTok(btn){
+  btn.textContent='✓ Copied!'; btn.style.color='var(--teal)';
+  setTimeout(()=>{btn.textContent='📋 Copy token string';btn.style.color=''},2000);
+}
+
+/* ─── NAV ─── */
+const ORDER=['s-intro','s-bank','s-getcode','s-pick','s-token','s-verified','s-success','s-recovery'];
+function goTo(id){
+  document.querySelectorAll('.scene').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  updateProg(ORDER.indexOf(id));
+  window.scrollTo(0,0);
+  if(id === 's-recovery') initRecoveryScene();
+  if(id === 's-getcode') initGetcodeScene();
+}
+function updateProg(i){
+  for(let j=0;j<7;j++){
+    const d=document.getElementById('p'+j);
+    if(!d)continue;
+    d.className='pd'+(j<i?' done':j===i?' active':'');
+  }
+}
+
+/* ─── RESTART ─── */
+function restart(){
+  persona=null; platIdx=null; tok=null; revoked=false;
+  document.querySelectorAll('.p-card').forEach(c=>c.classList.remove('sel'));
+  document.querySelectorAll('.plat-card').forEach(c=>c.classList.remove('sel'));
+  document.getElementById('btnStart').disabled=true;
+  document.getElementById('btnStart').textContent='Choose a persona to begin';
+  document.getElementById('btnIssue').disabled=true;
+  updateProg(0);
+  goTo('s-intro');
+}
+
+/* ─── UTILS ─── */
+function set(id,val){const e=document.getElementById(id);if(e)e.textContent=val}
+function setMaybe(id,val){const e=document.getElementById(id);if(e)e.textContent=val}
+function vis(id,show){const e=document.getElementById(id);if(e)e.style.display=show?'flex':'none'}
+</script>
+</body>
+</html>
